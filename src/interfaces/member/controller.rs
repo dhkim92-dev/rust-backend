@@ -11,9 +11,7 @@ use crate::interfaces::auth::dto::{
 };
 
 
-async fn login(
-    Json(req): Json<LoginRequest>
-) -> Json<LoginResponse> {
+async fn get_members() -> Json<CursorList<>> {
     info!("Login request: {:?}", req);
 
     Json(LoginResponse {

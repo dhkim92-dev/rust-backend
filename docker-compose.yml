@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: blog_admin
+      POSTGRES_PASSWORD: test1234
+      POSTGRES_DB: blog_dev
+    ports:
+      - "5432:5432"
+
+  flyway:
+    image: flyway/flyway:latest
+    container_name: flyway
+    depends_on:
+      - postgres
+    command:
+      - -url=jdbc:postgresql://postgres:5432/blog_dev
+      - -user=blog_admin
+      - -password=test1234
+      - migrate
+    volumes:
+      - ./migrations/dev:/flyway/sql
+
