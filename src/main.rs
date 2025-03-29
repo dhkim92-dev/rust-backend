@@ -20,7 +20,6 @@ async fn main() {
         .expect("Failed to bind TCP listener");
     println!("Listening on {}", listener.local_addr().unwrap());
 
-
     axum::serve(listener, app)
         .await
         .expect("Failed to start server");

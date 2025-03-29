@@ -6,7 +6,7 @@ use std::sync::{Arc};
 
 
 #[async_trait]
-pub trait AuthUsecase{
+pub trait AuthUsecase: Send + Sync {
     async fn login_with_email_password(&self, command: LoginCommand) -> anyhow::Result<LoginCommandResponse>;
 }
 

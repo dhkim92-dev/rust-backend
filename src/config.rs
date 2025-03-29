@@ -1,7 +1,5 @@
 use dotenvy::dotenv;
-use std::env;
 use clap::Parser;
-use super::interfaces;
 use super::common::database;
 
 #[derive(clap::Parser, Debug, Clone)]
