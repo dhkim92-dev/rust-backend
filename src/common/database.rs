@@ -1,4 +1,3 @@
-
 use sea_orm::{ConnectOptions, Database, DbConn};
 use tracing::{info, error};
 use crate::config::AppConfig;
@@ -15,7 +14,13 @@ pub async fn init_db(config: AppConfig) -> DbConn {
     info!("Connecting to database at {}", database_url);
 
     let mut opt = ConnectOptions::new(database_url.clone());
-    opt.max_connections(10);
+    opt.max_connections(64);
+    opt.min_connections(4);
+    opt.sqlx_logging(true);
+    opt.sqlx_logging_level(tracing::log::LevelFilter::Info);
+    opt.connect_timeout(std::time::Duration::from_secs(10));
+    opt.max_lifetime(std::time::Duration::from_secs(10));
+    opt.idle_timeout(std::time::Duration::from_secs(10));
 
     match Database::connect(opt).await {
         Ok(conn) => {

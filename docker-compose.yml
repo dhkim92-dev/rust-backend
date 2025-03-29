@@ -22,5 +22,5 @@ services:
       - -password=test1234
       - migrate
     volumes:
-      - ./migrations/dev:/flyway/sql
+      - ./migrations/dev:/flyway/sql:Z
 
