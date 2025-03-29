@@ -10,6 +10,8 @@ use super::interfaces::auth::controller::router;
 
 #[derive(clap::Parser, Debug, Clone)]
 pub struct AppConfig {
+
+    // Datasource
     #[arg(long,  default_value = "localhost")]
     pub database_host: String,
     #[arg(long,  default_value_t = 5432)]
@@ -24,6 +26,21 @@ pub struct AppConfig {
     pub redis_host: String,
     #[arg(long,  default_value_t = 6379)]
     pub redis_port: u16,
+
+    // JWT 
+    #[arg(long,  default_value = "test-access-token-secret")]
+    pub jwt_access_token_secret: String,
+    #[arg(long,  default_value = "test-refresh-token-secret")]
+    pub jwt_refresh_token_secret: String,
+    #[arg(long,  default_value_t=900000)]
+    pub jwt_access_token_expire: u64,
+    #[arg(long,  default_value_t=604800000)]
+    pub jwt_refresh_token_expire: u64,
+    #[arg(long,  default_value = "https://identification.dohoon-kim.kr")]
+    pub jwt_issuer: String,
+    #[arg(long,  default_value = "https://www.dohoon-kim.kr")]
+    pub jwt_audience: String,
+    // OAuth
 }
 
 #[derive(Debug, Clone)]

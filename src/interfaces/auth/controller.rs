@@ -47,7 +47,7 @@ pub fn router(ctx: Arc<AppContext>) -> Router {
     info!("Creating auth router");
 
     let member_repository = Arc::new(MemberQueryRepository::new(ctx.clone()));
-    let auth_usecase: Arc<dyn AuthUsecase> = Arc::new( AuthService::new(member_repository) );
+    let auth_usecase: Arc<dyn AuthUsecase> = Arc::new( AuthService::new(ctx.clone(), member_repository) );
 
     info!("Auth Port dependency injected");
 
