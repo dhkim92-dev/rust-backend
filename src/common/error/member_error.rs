@@ -1,9 +1,8 @@
 use axum::{http::StatusCode, response::IntoResponse, Json};
-use error_code_macro::ErrorCode;
-
+use super::error_code::ErrorCode;
 use crate::common::wrapper::ApiResponse;
 
-#[derive(ErrorCode)]
+#[derive(error_code_macro::ErrorCode, Copy, Clone, Debug)]
 pub struct MemberError {
     pub status: StatusCode,
     pub code: &'static str,
@@ -11,16 +10,15 @@ pub struct MemberError {
 }
 
 impl MemberError {
-
     pub const MemberNotExist: Self = Self {
         status: StatusCode::NOT_FOUND,
-        code: "AE-001",
+        code: "ME-001",
         message: "이메일 또는 비밀번호가 잘못되었습니다.",
     };
 
     pub const EmailAlreadyExist: Self = Self {
         status: StatusCode::BAD_REQUEST,
-        code: "AE-002",
+        code: "ME-002",
         message: "이미 존재하는 이메일입니다.",
     };
 }

@@ -1,5 +1,7 @@
 use axum::{
-    routing::post, Extension, Json, Router
+    routing::post, Extension, Json, Router,
+    response::IntoResponse,
+    response::Response,
 };
 use tracing::info;
 use std::sync::{Arc};
@@ -11,24 +13,34 @@ use crate::{
     application::dto::auth::{LoginCommand, LoginCommandResponse},
     application::usecases::auth_usecase::{AuthService, AuthUsecase},
 };
+use crate::common::error::auth_error::AuthError;
+use crate::common::error::error_code::ErrorCode;
+
 
 async fn login(
     Extension(auth_usecase): Extension<Arc<dyn AuthUsecase>>,
     Json(req): Json<LoginRequest>
-) -> Result<Json<LoginResponse>, axum::http::StatusCode> {
+) -> Result<Json<LoginResponse>, Response> {
     info!("Login request: {:?}", req);
-    let result = auth_usecase.login_with_email_password(
-        LoginCommand {
-            principal: req.email.clone(),
-            credential: req.password.clone()
-        }
-    ).await.expect("Login failed");
+    let command = LoginCommand {
+        principal: req.email,
+        credential: req.password,
+    };
 
-    Ok(Json(LoginResponse {
-        typ: "Bearer".to_string(),
+    let result = auth_usecase.login_with_email_password(command)
+        .await
+        .map_err(|err| {
+            err.as_ref().into_response()
+        })?;
+
+    let response = LoginResponse {
+        typ: result.typ,
         access_token: result.access_token,
-        refresh_token: result.refresh_token
-    }))
+        refresh_token: result.refresh_token,
+    };
+    info!("Login response: {:?}", response);
+    Ok(Json(response))
+    
 }
 
 pub fn router(ctx: Arc<AppContext>) -> Router {

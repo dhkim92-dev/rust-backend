@@ -1,10 +1,8 @@
-
 use axum::{http::StatusCode, response::IntoResponse, Json};
-use error_code_macro::ErrorCode;
-
 use crate::common::wrapper::ApiResponse;
+use super::error_code::ErrorCode;
 
-#[derive(ErrorCode)]
+#[derive(error_code_macro::ErrorCode, Copy, Clone, Debug)]
 pub struct AuthError {
     pub status: StatusCode,
     pub code: &'static str,

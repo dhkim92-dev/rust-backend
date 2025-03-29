@@ -7,7 +7,7 @@ pub struct LoginCommand  {
 
 pub  struct  LoginCommandResponse  {
     pub typ:String,
-    pub access_token: String,
+    pub acces_token: String,
     pub refresh_token: String
 }
 
