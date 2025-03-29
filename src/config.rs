@@ -1,6 +1,12 @@
+use std::sync::Arc;
+
+use axum::{Extension, Router};
 use dotenvy::dotenv;
 use clap::Parser;
+use crate::interfaces;
+
 use super::common::database;
+use super::interfaces::auth::controller::router;
 
 #[derive(clap::Parser, Debug, Clone)]
 pub struct AppConfig {
@@ -26,12 +32,13 @@ pub struct AppContext {
     pub db: sea_orm::DatabaseConnection
 }
 
-pub fn api_router() -> axum::Router {
- //   interfaces::auth::controller::router()
-    axum::Router::new()
+pub fn api_router(ctx: Arc<AppContext>) -> axum::Router {
+    Router::new()
+        .merge(interfaces::auth::controller::router(ctx.clone()))
+        .layer(Extension(ctx.clone()))
 }
 
-pub async fn create_context() -> AppContext {
+pub async fn create_context() -> Arc<AppContext>{
     let env = std::env::var("ENV").unwrap_or_else(|_| "env".to_string());
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -48,8 +55,8 @@ pub async fn create_context() -> AppContext {
 
     let db = database::init_db(app_config.clone()).await;
 
-    AppContext {
+    Arc::new(AppContext {
         config: std::sync::Arc::new(app_config),
         db: db
-    }
+    })
 }

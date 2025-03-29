@@ -10,6 +10,7 @@ pub struct CursorList<T> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ApiResponse<T> {
+    pub timestamp: NaiveDateTime,
     pub status: i32,
     pub data: Option<T>,
     pub code: Option<String>,
