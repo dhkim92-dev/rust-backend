@@ -29,7 +29,8 @@ pub struct AppContext {
 }
 
 pub fn api_router() -> axum::Router {
-    interfaces::auth::controller::router()
+ //   interfaces::auth::controller::router()
+    axum::Router::new()
 }
 
 pub async fn create_context() -> AppContext {

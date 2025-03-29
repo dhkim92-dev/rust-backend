@@ -1,20 +1,17 @@
 use axum::{
-    routing::post,
-    Router,
-    Json,
-    extract::State
+    extract::State, routing::post, Extension, Json, Router
 };
 use tracing::info;
-use crate::application::usecases::auth::{AuthService,AuthUsecase};
 use std::sync::{Arc};
 
 use crate::interfaces::auth::dto::{
     LoginRequest,
     LoginResponse
 };
+use crate::application::usecases::auth;
 
 async fn login(
-    State(auth_service): State<AuthService>,
+    Extension(auth_usecase): Extension<Arc<dyn AuthUsecase>>,
     Json(req): Json<LoginRequest>
 ) -> Json<LoginResponse> {
     info!("Login request: {:?}", req);
@@ -33,12 +30,12 @@ async fn login(
     })
 }
 
-pub fn router() -> Router {
+pub fn router(ctx: Arc<AppContext>) -> Router {
     info!("Creating auth router");
 
-    let auth_service = Arc::new(AuthService::new())
+    let member_repository = Arc::new(SeaOrmMemberRepository::new(ctx.clone()));
+
 
     Router::new()
         .route("/api/v1/auth", post(login))
-        .layer(axum::Extension())
-}
+} 
