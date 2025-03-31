@@ -1,13 +1,17 @@
 use super::usecases::{LoginUseCase, LoginCommand, LoginCommandResult};
 use crate::domain::member::repository::LoadMemberPort;
 use crate::common::error::error_code::ErrorCode as E;
+use crate::common::jwt::JwtService;
 use shaku::Component;
 use std::sync::Arc;
+
 #[derive(Component)]
 #[shaku(interface = LoginUseCase)]
 pub struct AuthService {
     #[shaku(inject)]
-    member_repository: Arc<dyn LoadMemberPort>
+    member_repository: Arc<dyn LoadMemberPort>,
+    #[shaku(inject)]
+    jwt_service: Arc<dyn JwtService>,
 }
 
 #[async_trait::async_trait]
@@ -22,15 +26,13 @@ impl LoginUseCase for AuthService {
             E::EMAIL_PASSWORD_MISMATCH
         })?;
 
-        println!("valid_password: {}", valid_password);
-
         if !valid_password {
             return Err(E::EMAIL_PASSWORD_MISMATCH);
         }
 
         Ok(LoginCommandResult {
-            access_token: member.id.unwrap().to_string(),
-            refresh_token: member.password.to_string()
+            access_token: self.jwt_service.create_access_token(&member),
+            refresh_token: self.jwt_service.create_refresh_token(&member),
         })
     }
 }

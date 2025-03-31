@@ -13,6 +13,7 @@ pub mod MemberMapper {
             role: ormEntity.role.clone(),
             created_at: ormEntity.created_at.clone(),
             updated_at: ormEntity.updated_at.clone(),
+            is_activated: ormEntity.is_activated
         }
     }
 
@@ -25,6 +26,7 @@ pub mod MemberMapper {
             role: domainEntity.role.clone(),
             created_at: domainEntity.created_at.clone(),
             updated_at: domainEntity.updated_at.clone(),
+            is_activated: domainEntity.is_activated
         }
     }
 }

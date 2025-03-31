@@ -9,5 +9,6 @@ pub struct MemberEntity {
     pub role: String,
     pub created_at:  NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub is_activated: bool,
 } 
 

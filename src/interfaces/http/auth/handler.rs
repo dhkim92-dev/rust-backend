@@ -6,7 +6,6 @@ use axum::Json;
 use shaku::{HasComponent};
 
 use super::dto::{LoginRequest, LoginResponse};
-// use crate::config::AppContext;
 use crate::di::AppContext;
 use crate::common::wrapper::ApiResponse;
 use crate::common::error::error_code::ErrorCode;
@@ -16,7 +15,8 @@ pub async fn login(
     State(ctx): State<Arc<AppContext>>,
     Json(req): Json<LoginRequest>
 ) -> Result<impl IntoResponse, ErrorCode> {
-    println!("Login request called");
+    info!("login request from {:?}", req.email);
+
     let login_usecase: &dyn LoginUseCase = ctx.resolve_ref();
     let result = login_usecase.login(
         crate::application::auth::usecases::LoginCommand{
@@ -26,8 +26,8 @@ pub async fn login(
 
     let response = LoginResponse {
         typ: "Bearer".to_string(),
-        access_token: "access_token".to_string(),
-        refresh_token: "refresh_token".to_string(),
+        access_token: result.access_token,
+        refresh_token: result.refresh_token
     };
 
     Ok(ApiResponse::<LoginResponse>::new(201, "로그인 성공".to_string(), Some(response)))
