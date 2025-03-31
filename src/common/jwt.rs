@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::{config::AppContext, domain::member::entity::MemberEntity};
 use jsonwebtoken::{encode, Header};
 use serde::{Deserialize, Serialize};
 
@@ -24,7 +23,7 @@ struct RefreshTokenClaims {
     iss: String,
     aud: String,
 }
-
+/* 
 pub fn create_access_token(context: Arc<AppContext>, member: &MemberEntity) -> String {
 
     let claims = AccessTokenClaims {
@@ -84,4 +83,4 @@ pub fn decode_refresh_token(context: Arc<AppContext>, token: &str) -> Result<Ref
     .map_err(|_| "Failed to decode refresh token".to_string())?;
     Ok(token_data.claims)
 }
-
+ */
