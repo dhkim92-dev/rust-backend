@@ -1,14 +1,12 @@
 use serde::{Serialize, Deserialize};
 
-use crate ::interfaces::auth::vo::Email;
-
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct LoginRequest {
     pub email: String,
     pub password: String
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct LoginResponse {
     pub typ: String,
     pub access_token: String,

@@ -1,16 +1,19 @@
-use axum::{middleware::AddExtension, Extension, Router};
 use clap::Parser;
 use tracing::info;
 use std::{env, sync::Arc};
-use  dotenvy::dotenv;
-
+use dotenvy::dotenv;
+use axum::{Router};
 mod interfaces;
 mod common;
 mod config;
+mod domain;
+mod application;
+mod di;
 
 use common::database;
-use config::{AppConfig, AppContext};
-
+use config::AppConfig;
+use di::AppContext;
+use domain::member::repository::{MemberQueryRepository, MemberQueryRepositoryParameters};
 
 #[tokio::main]
 async fn main() {
@@ -19,20 +22,19 @@ async fn main() {
         .unwrap_or_else(|_| {
             AppConfig::parse_from(env::args())
         });
-    
     let db = database::init_db(&cfg).await;
-    let ctx = AppContext {
-        config: Arc::new(cfg.clone()),
-        db
-    };
 
-    let app = interfaces::http::create_routers(ctx.clone());
-
+    let ctx = AppContext::builder()
+        .with_component_parameters::<MemberQueryRepository>(MemberQueryRepositoryParameters {
+            db: db.clone(),
+        }).build();
     
+    let app = interfaces::http::create_routers(Arc::new(ctx));
+
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
         .await
         .expect("Failed to bind TCP listener");
-    println!("Listening on {}", listener.local_addr().unwrap());
+    info!("Listening on {}", listener.local_addr().unwrap());
 
     axum::serve(listener, app)
         .await

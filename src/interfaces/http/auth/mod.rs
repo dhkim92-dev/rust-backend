@@ -1,11 +1,15 @@
 pub mod handler;
+pub mod vo;
+pub mod dto;
 
 use std::sync::Arc;
+use axum::Router;
+use axum::routing::post;
+use handler::login;
+use crate::di::AppContext;
 
-fn router(ctx: Arc<AppContext>) -> Router {
-
+pub fn router(ctx: Arc<AppContext>) -> Router {
     Router::new()
-        .nest("/api/v1/authentication", handler::router())
-        .layer(Extension(handler::AppContext::new()))
-    
+        .route("/", post(login))
+        .with_state(ctx.clone())
 }

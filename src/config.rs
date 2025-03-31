@@ -40,11 +40,6 @@ pub struct AppConfig {
     // OAuth
 }
 
-#[derive(Debug, Clone)]
-pub struct AppContext {
-    pub config: std::sync::Arc<AppConfig>,
-    pub db: sea_orm::DatabaseConnection
-}
 /* 
 pub async fn create_context() -> AppContext{
     let env = std::env::var("ENV").unwrap_or_else(|_| "env".to_string());

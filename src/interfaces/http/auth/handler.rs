@@ -1,57 +1,35 @@
-use axum::{
-    routing::post, Extension, Json, Router,
-    response::IntoResponse,
-    response::Response,
-};
 use tracing::info;
 use std::sync::{Arc};
+use axum::response::IntoResponse;
+use axum::extract::State;
+use axum::Json;
+use shaku::{HasComponent};
 
-use crate::config::AppContext;
-use crate::domain::member::repository::MemberQueryRepository;
-use crate::{
-    interfaces::auth::dto::{LoginRequest, LoginResponse},
-    application::dto::auth::{LoginCommand, LoginCommandResponse},
-    application::usecases::auth_usecase::{AuthService, AuthUsecase},
-};
-use crate::common::error::auth_error::AuthError;
+use super::dto::{LoginRequest, LoginResponse};
+// use crate::config::AppContext;
+use crate::di::AppContext;
+use crate::common::wrapper::ApiResponse;
 use crate::common::error::error_code::ErrorCode;
+use crate::application::auth::usecases::LoginUseCase;
 
-
-async fn login(
-    Extension(auth_usecase): Extension<Arc<dyn AuthUsecase>>,
+pub async fn login(
+    State(ctx): State<Arc<AppContext>>,
     Json(req): Json<LoginRequest>
-) -> Result<Json<LoginResponse>, Response> {
-    info!("Login request: {:?}", req);
-    let command = LoginCommand {
-        principal: req.email,
-        credential: req.password,
-    };
-
-    let result = auth_usecase.login_with_email_password(command)
-        .await
-        .map_err(|err| {
-            err.as_ref().into_response()
-        })?;
+) -> Result<impl IntoResponse, ErrorCode> {
+    println!("Login request called");
+    let login_usecase: &dyn LoginUseCase = ctx.resolve_ref();
+    let result = login_usecase.login(
+        crate::application::auth::usecases::LoginCommand{
+            principal: req.email,
+            credential: req.password,
+        }).await?;
 
     let response = LoginResponse {
-        typ: result.typ,
-        access_token: result.access_token,
-        refresh_token: result.refresh_token,
+        typ: "Bearer".to_string(),
+        access_token: "access_token".to_string(),
+        refresh_token: "refresh_token".to_string(),
     };
-    info!("Login response: {:?}", response);
-    Ok(Json(response))
-    
+
+    Ok(ApiResponse::<LoginResponse>::new(201, "로그인 성공".to_string(), Some(response)))
 }
 
-pub fn router(ctx: Arc<AppContext>) -> Router {
-    info!("Creating auth router");
-
-    let member_repository = Arc::new(MemberQueryRepository::new(ctx.clone()));
-    let auth_usecase: Arc<dyn AuthUsecase> = Arc::new( AuthService::new(ctx.clone(), member_repository) );
-
-    info!("Auth Port dependency injected");
-
-    Router::new()
-        .route("/api/v1/authentication", post(login))
-        .layer(Extension(auth_usecase))
-} 
