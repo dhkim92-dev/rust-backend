@@ -14,6 +14,7 @@ use common::database;
 use config::AppConfig;
 use di::AppContext;
 use domain::member::repository::{MemberQueryRepository, MemberQueryRepositoryParameters};
+use config::{ConfigProviderImpl, ConfigProviderImplParameters};
 
 #[tokio::main]
 async fn main() {
@@ -22,12 +23,18 @@ async fn main() {
         .unwrap_or_else(|_| {
             AppConfig::parse_from(env::args())
         });
-    let db = database::init_db(&cfg).await;
+    let cfg: Arc<AppConfig> = Arc::new(cfg);
 
+
+    let db = database::init_db(cfg.clone()).await;
     let ctx = AppContext::builder()
         .with_component_parameters::<MemberQueryRepository>(MemberQueryRepositoryParameters {
             db: db.clone(),
-        }).build();
+        })
+        .with_component_parameters::<ConfigProviderImpl>(ConfigProviderImplParameters {
+            config: cfg.clone()
+        })
+    .build();
     
     let app = interfaces::http::create_routers(Arc::new(ctx));
 

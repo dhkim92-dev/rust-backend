@@ -43,4 +43,16 @@ impl ErrorCode {
         code: "ME-001",
         message: "존재하지 않는 회원입니다."
     };
+
+    pub const INVALID_JWT_TOKEN: ErrorCode = ErrorCode {
+        status: 401, 
+        code: "AE-002", 
+        message: "유효하지 않은 JWT 토큰입니다."
+    };
+
+    pub const NOT_ENOUGH_PERMISSION: ErrorCode = ErrorCode {
+        status: 403, 
+        code: "AE-003", 
+        message: "권한이 없습니다."
+    };
 }

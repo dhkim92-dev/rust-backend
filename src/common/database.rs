@@ -1,8 +1,9 @@
 use sea_orm::{ConnectOptions, Database, DbConn};
 use tracing::{info, error};
+use std::sync::Arc;
 use crate::config::AppConfig;
 
-pub async fn init_db(config: &AppConfig) -> DbConn {
+pub async fn init_db(config: Arc<AppConfig>) -> DbConn {
     let database_url = format!("postgres://{}:{}@{}:{}/{}", 
         config.database_username, 
         config.database_password, 
