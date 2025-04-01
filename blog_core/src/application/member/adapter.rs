@@ -1,67 +1,134 @@
-use super::{MemberCreateUseCase, MemberUpdateUseCase, MemberDeleteUseCase, MemberCreateCommand, MemberUpdateCommand, MemberDto};
+use super::{
+    MemberCreateCommand, MemberCreateUseCase, MemberDeleteUseCase, MemberDto, MemberUpdateCommand,
+    MemberUpdateUseCase,
+};
+use crate::common::database::*;
+use crate::common::error::error_code::ErrorCode;
+use crate::common::middleware::security::LoginMember;
+use crate::domain::member::entity::MemberEntity;
+use crate::domain::member::repository::{LoadMemberPort, SaveMemberPort};
 use shaku::Component;
 use std::sync::Arc;
-use crate::domain::member::repository::LoadMemberPort;
-use crate::common::middleware::security::LoginMember;
-use crate::common::error::error_code::ErrorCode;
 
 #[derive(Component)]
 #[shaku(interface = MemberCreateUseCase)]
 pub struct MemberCreateUseCaseImpl {
     #[shaku(inject)]
-    member_repository: Arc<dyn LoadMemberPort>
+    db: Arc<dyn DbConnProvider>,
+    #[shaku(inject)]
+    load_member_port: Arc<dyn LoadMemberPort>,
+    #[shaku(inject)]
+    save_member_port: Arc<dyn SaveMemberPort>,
 }
 
 #[derive(Component)]
 #[shaku(interface = MemberUpdateUseCase)]
 pub struct MemberUpdateUseCaseImpl {
     #[shaku(inject)]
-    member_repository: Arc<dyn LoadMemberPort>
+    db: Arc<dyn DbConnProvider>,
+    #[shaku(inject)]
+    load_member_port: Arc<dyn LoadMemberPort>,
+    #[shaku(inject)]
+    save_member_port: Arc<dyn SaveMemberPort>,
 }
 
 #[derive(Component)]
 #[shaku(interface = MemberDeleteUseCase)]
 pub struct MemberDeleteUseCaseImpl {
     #[shaku(inject)]
-    member_repository: Arc<dyn LoadMemberPort>
+    db: Arc<dyn DbConnProvider>,
+    #[shaku(inject)]
+    load_member_port: Arc<dyn LoadMemberPort>,
+    #[shaku(inject)]
+    save_member_port: Arc<dyn SaveMemberPort>,
 }
 
 #[async_trait::async_trait]
 impl MemberCreateUseCase for MemberCreateUseCaseImpl {
-    
     async fn create(&self, command: MemberCreateCommand) -> Result<MemberDto, ErrorCode> {
+        let txn = self.db.rw_txn().await?;
 
-        Ok(MemberDto{
-            id: uuid::Uuid::new_v4(),
+        let member = self
+            .load_member_port
+            .find_by_email(&txn, &command.email)
+            .await?;
+
+        if member.is_some() {
+            return Err(ErrorCode::EMAIL_ALREADY_EXISTS);
+        }
+
+        let member_entity = MemberEntity {
+            id: Some(uuid::Uuid::new_v4()),
             nickname: command.nickname,
             email: command.email,
-            role: "user".to_string(),
-            created_at: chrono::Utc::now().to_string(),
-            updated_at: chrono::Utc::now().to_string(),
-            is_activated: true
-        })
+            password: bcrypt::hash(command.password, 10).unwrap(),
+            role: "MEMBER".to_string(),
+            created_at: chrono::Utc::now().naive_utc(),
+            updated_at: chrono::Utc::now().naive_utc(),
+            is_activated: true,
+        };
+
+        let member_entity = self.save_member_port.save(&txn, member_entity).await?;
+        txn.commit().await?;
+
+        Ok(MemberDto::from(member_entity))
     }
 }
 
 #[async_trait::async_trait]
 impl MemberUpdateUseCase for MemberUpdateUseCaseImpl {
-    async fn update(&self, login_member: LoginMember, command: MemberUpdateCommand) -> Result<MemberDto, ErrorCode> {
-        Ok(MemberDto{
-            id: uuid::Uuid::new_v4(),
-            nickname: "not_implemented".to_string(),
-            email: "not_implemented".to_string(),
-            role: "user".to_string(),
-            created_at: chrono::Utc::now().to_string(),
-            updated_at: chrono::Utc::now().to_string(),
-            is_activated: true
-        })
+    async fn update(
+        &self,
+        login_member: LoginMember,
+        command: MemberUpdateCommand,
+    ) -> Result<MemberDto, ErrorCode> {
+        let txn = self.db.rw_txn().await?;
+
+        let member = self
+            .load_member_port
+            .find_by_id(&txn, login_member.id)
+            .await?;
+
+        if member.is_none() {
+            return Err(ErrorCode::NOT_FOUND);
+        }
+
+        let mut member_entity = member.unwrap();
+        member_entity.nickname = command.nickname;
+        member_entity.email = command.email;
+        member_entity.password = bcrypt::hash(command.password, 10).unwrap();
+        member_entity.updated_at = chrono::Utc::now().naive_utc();
+
+        let modified_entity = self.save_member_port.update(&txn, member_entity).await?;
+        txn.commit().await?;
+
+        Ok(MemberDto::from(modified_entity))
     }
 }
 
 #[async_trait::async_trait]
 impl MemberDeleteUseCase for MemberDeleteUseCaseImpl {
+    async fn delete(
+        &self,
+        login_member: LoginMember,
+        target_id: uuid::Uuid,
+    ) -> Result<bool, ErrorCode> {
+        let txn = self.db.rw_txn().await?;
+        let member = self.load_member_port.find_by_id(&txn, target_id).await?;
 
-    async fn delete(&self, login_member: LoginMember, target_id: uuid::Uuid) -> Result<bool, ErrorCode> {
+        if member.is_none() {
+            return Err(ErrorCode::NOT_FOUND);
+        }
+
+        //let member_entity = member.unwrap();
+
+        if target_id != login_member.id {
+            return Err(ErrorCode::FORBIDDEN);
+        }
+
+        self.save_member_port.delete(&txn, target_id).await?;
+        txn.commit().await?;
+
         Ok(true)
     }
 }

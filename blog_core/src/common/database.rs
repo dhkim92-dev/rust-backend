@@ -1,11 +1,22 @@
-use sea_orm::{ConnectOptions, Database, DbConn};
-use shaku::{Component, Interface};
-use tracing::{info, error};
-use std::sync::Arc;
 use crate::config::AppConfig;
+use sea_orm::{
+    ConnectOptions, Database, DatabaseConnection, DatabaseTransaction, DbConn, TransactionTrait,
+};
+use shaku::{Component, Interface};
+use std::sync::Arc;
+use tracing::{error, info};
 
+#[async_trait::async_trait]
 pub trait DbConnProvider: Interface {
-    pub fn get() -> DbConn;
+    async fn ro_txn(&self) -> Result<DatabaseTransaction, sea_orm::DbErr>;
+
+    async fn rw_txn(&self) -> Result<DatabaseTransaction, sea_orm::DbErr>;
+
+    async fn txn_with_options(
+        &self,
+        isolation_level: Option<sea_orm::IsolationLevel>,
+        access_mode: Option<sea_orm::AccessMode>,
+    ) -> Result<DatabaseTransaction, sea_orm::DbErr>;
 }
 
 #[derive(Component)]
@@ -14,13 +25,44 @@ pub struct DbConnProviderImpl {
     db: DbConn,
 }
 
+#[async_trait::async_trait]
+impl DbConnProvider for DbConnProviderImpl {
+    async fn ro_txn(&self) -> Result<DatabaseTransaction, sea_orm::DbErr> {
+        self.db
+            .begin_with_config(
+                Some(sea_orm::IsolationLevel::ReadCommitted),
+                Some(sea_orm::AccessMode::ReadOnly),
+            )
+            .await
+    }
+
+    async fn rw_txn(&self) -> Result<DatabaseTransaction, sea_orm::DbErr> {
+        self.db
+            .begin_with_config(
+                Some(sea_orm::IsolationLevel::ReadCommitted),
+                Some(sea_orm::AccessMode::ReadWrite),
+            )
+            .await
+    }
+
+    async fn txn_with_options(
+        &self,
+        isolation_level: Option<sea_orm::IsolationLevel>,
+        access_mode: Option<sea_orm::AccessMode>,
+    ) -> Result<DatabaseTransaction, sea_orm::DbErr> {
+        self.db
+            .begin_with_config(isolation_level, access_mode)
+            .await
+    }
+}
 
 pub async fn init_db(config: Arc<AppConfig>) -> DbConn {
-    let database_url = format!("postgres://{}:{}@{}:{}/{}", 
-        config.database_username, 
-        config.database_password, 
-        config.database_host, 
-        config.database_port, 
+    let database_url = format!(
+        "postgres://{}:{}@{}:{}/{}",
+        config.database_username,
+        config.database_password,
+        config.database_host,
+        config.database_port,
         config.database_name
     );
 
@@ -41,9 +83,8 @@ pub async fn init_db(config: Arc<AppConfig>) -> DbConn {
             conn
         }
         Err(e) => {
-            error!("Failed to connect to database: {}", e);    
+            error!("Failed to connect to database: {}", e);
             panic!("Failed to connect to database: {}", e);
         }
     }
 }
-

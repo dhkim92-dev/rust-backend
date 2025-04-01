@@ -348,7 +348,6 @@ dependencies = [
  "async-trait",
  "axum",
  "bcrypt",
- "blog_macro",
  "chrono",
  "clap",
  "dotenvy",
@@ -363,16 +362,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
-]
-
-[[package]]
-name = "blog_macro"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "sea-orm",
- "syn 1.0.109",
 ]
 
 [[package]]
