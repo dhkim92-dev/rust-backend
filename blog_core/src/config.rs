@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use crate::interfaces;
-use axum::{Extension, Router};
+// use crate::interfaces;
+// use axum::{Extension, Router};
 use clap::Parser;
-use dotenvy::dotenv;
+// use dotenvy::dotenv;
 use shaku::{Component, Interface};
 
 pub trait ConfigProvider: Interface {
@@ -24,6 +24,11 @@ impl ConfigProvider for ConfigProviderImpl {
 
 #[derive(Parser, Debug, Clone)]
 pub struct AppConfig {
+    // Server
+    #[arg(long, default_value = "localhost:8080")]
+    pub server_host: String,
+    #[arg(long, default_value = "HTTP")]
+    protocol: String,
     // Datasource
     #[arg(long, default_value = "localhost")]
     pub database_host: String,

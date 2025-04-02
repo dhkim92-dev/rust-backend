@@ -3,7 +3,7 @@ use std::sync::Arc;
 use super::error::error_code::ErrorCode;
 use crate::config::{AppConfig, ConfigProvider};
 use crate::domain::member::entity::MemberEntity;
-use jsonwebtoken::{encode, Header, Validation};
+use jsonwebtoken::{encode, Header};
 use serde::{Deserialize, Serialize};
 use shaku::{Component, Interface};
 use tracing::error;
@@ -55,11 +55,11 @@ impl Into<AccessTokenClaims> for String {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RefreshTokenClaims {
-    sub: String,
-    exp: usize,
-    iat: usize,
-    iss: String,
-    aud: String,
+    pub sub: String,
+    pub exp: usize,
+    pub iat: usize,
+    pub iss: String,
+    pub aud: String,
 }
 
 fn map_to_access_token_claims(cfg: Arc<AppConfig>, member: &MemberEntity) -> AccessTokenClaims {
@@ -145,7 +145,16 @@ impl JwtService for JwtServiceImpl {
             ErrorCode::INVALID_JWT_TOKEN
         });
 
-        Ok(token_data.unwrap().claims)
+        match token_data {
+            Ok(data) => {
+                tracing::info!("token_data: {:?}", data);
+                Ok(data.claims)
+            }
+            Err(err) => {
+                error!("Failed to decode access token");
+                Err(ErrorCode::INVALID_JWT_TOKEN)
+            }
+        }
     }
 
     fn decode_refresh_token(&self, token: &str) -> Result<RefreshTokenClaims, ErrorCode> {
@@ -159,8 +168,11 @@ impl JwtService for JwtServiceImpl {
             &jsonwebtoken::DecodingKey::from_secret(secret.as_ref()),
             &valid_options,
         )
-        .map_err(|_| ErrorCode::INVALID_JWT_TOKEN);
-        Ok(token_data.unwrap().claims)
+        .map_err(|_| {
+            error!("Invalid JWT token: {}", token);
+            ErrorCode::INVALID_JWT_TOKEN
+        })?;
+        Ok(token_data.claims)
     }
 }
 

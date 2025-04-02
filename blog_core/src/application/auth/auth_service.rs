@@ -1,10 +1,11 @@
-use super::usecases::{LoginCommand, LoginCommandResult, LoginUseCase};
-// use crate::common::middleware::transaction::get_transaction;
+use super::usecases::{
+    JwtReissueResult, JwtUseCase, LoginCommand, LoginCommandResult, LoginUseCase,
+};
 use crate::common::database::DbConnProvider;
 use crate::common::error::error_code::ErrorCode as E;
 use crate::common::jwt::JwtService;
 use crate::domain::member::repository::LoadMemberPort;
-use sea_orm::TransactionTrait;
+use uuid::Uuid;
 
 use shaku::Component;
 use std::sync::Arc;
@@ -15,7 +16,18 @@ pub struct AuthService {
     #[shaku(inject)]
     db: Arc<dyn DbConnProvider>,
     #[shaku(inject)]
-    member_repository: Arc<dyn LoadMemberPort>,
+    load_member_port: Arc<dyn LoadMemberPort>,
+    #[shaku(inject)]
+    jwt_service: Arc<dyn JwtService>,
+}
+
+#[derive(Component)]
+#[shaku(interface = JwtUseCase)]
+pub struct JwtUseCaseImpl {
+    #[shaku(inject)]
+    db: Arc<dyn DbConnProvider>,
+    #[shaku(inject)]
+    load_member_port: Arc<dyn LoadMemberPort>,
     #[shaku(inject)]
     jwt_service: Arc<dyn JwtService>,
 }
@@ -29,7 +41,7 @@ impl LoginUseCase for AuthService {
             .await
             .map_err(|_| E::INTERNAL_SERVER_ERROR)?;
         let member = self
-            .member_repository
+            .load_member_port
             .find_by_email(&txn, &command.principal)
             .await;
 
@@ -56,6 +68,33 @@ impl LoginUseCase for AuthService {
             refresh_token: self
                 .jwt_service
                 .create_refresh_token(&member)
+                .map_err(|_| E::UNAUTHORIZED)?,
+        })
+    }
+}
+
+#[async_trait::async_trait]
+impl JwtUseCase for JwtUseCaseImpl {
+    async fn refresh_jwt(&self, refresh_token: String) -> Result<JwtReissueResult, E> {
+        let txn = self.db.ro_txn().await?;
+
+        let member_id = self
+            .jwt_service
+            .decode_refresh_token(&refresh_token)
+            .map_err(|_| E::UNAUTHORIZED)
+            .and_then(|claims| Uuid::parse_str(claims.sub.as_str()).map_err(|_| E::UNAUTHORIZED))?;
+
+        let member = match self.load_member_port.find_by_id(&txn, member_id).await? {
+            Some(member) => member,
+            None => return Err(E::NOT_FOUND),
+        };
+
+        txn.commit().await;
+
+        Ok(JwtReissueResult {
+            access_token: self
+                .jwt_service
+                .create_access_token(&member)
                 .map_err(|_| E::UNAUTHORIZED)?,
         })
     }

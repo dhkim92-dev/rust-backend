@@ -1,8 +1,8 @@
 use crate::common::wrapper::ApiResponse;
 use axum::{http::StatusCode, response::IntoResponse, Json};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorCode {
     pub status: u16,
     pub code: &'static str,

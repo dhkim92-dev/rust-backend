@@ -13,7 +13,6 @@ use common::database;
 use config::AppConfig;
 use config::{ConfigProviderImpl, ConfigProviderImplParameters};
 use di::AppContext;
-use domain::member::repository::{MemberQueryRepository, MemberQueryRepositoryParameters};
 
 #[tokio::main]
 async fn main() {

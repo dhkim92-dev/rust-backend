@@ -9,12 +9,11 @@ use axum::{
     body::Body,
     extract::{Request, State},
     middleware::Next,
-    response::{IntoResponse, Response},
-    Error, Extension, Json,
+    response::Response,
 };
 use shaku::HasComponent;
-use std::{cell::Ref, sync::Arc};
-use tracing::{debug, error, info, warn};
+use std::sync::Arc;
+use tracing::info;
 
 #[derive(Debug, Clone)]
 pub struct LoginMember {

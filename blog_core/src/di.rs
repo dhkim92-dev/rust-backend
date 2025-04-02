@@ -3,7 +3,7 @@ use crate::application::member::adapter::{
 };
 use shaku::module;
 
-use super::application::auth::auth_service::AuthService;
+use super::application::auth::*;
 use super::common::database::DbConnProviderImpl;
 use super::common::jwt::JwtServiceImpl;
 use super::config::ConfigProviderImpl;
@@ -16,12 +16,15 @@ module! {
             DbConnProviderImpl,
             ConfigProviderImpl,
 
-            //
+            // Auth
             AuthService,
+            JwtUseCaseImpl,
+            JwtServiceImpl,
+
+            // Member
             MemberQueryRepository,
             MemberCommandRepository,
 
-            JwtServiceImpl,
 
             /* Member Service Related */
             MemberCreateUseCaseImpl,
