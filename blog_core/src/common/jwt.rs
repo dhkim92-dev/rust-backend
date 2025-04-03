@@ -114,7 +114,7 @@ impl JwtService for JwtServiceImpl {
             &claims,
             &jsonwebtoken::EncodingKey::from_secret(secret.as_ref()),
         )
-        .map_err(|_| ErrorCode::JWT_BUILD_CLAIMS_EXCEPTION)
+        .map_err(|_| ErrorCode::JwtBuildClaimsException)
     }
 
     fn create_refresh_token(&self, member: &MemberEntity) -> Result<String, ErrorCode> {
@@ -126,7 +126,7 @@ impl JwtService for JwtServiceImpl {
             &claims,
             &jsonwebtoken::EncodingKey::from_secret(secret.as_ref()),
         )
-        .map_err(|_| ErrorCode::JWT_BUILD_CLAIMS_EXCEPTION)
+        .map_err(|_| ErrorCode::JwtBuildClaimsException)
     }
 
     fn decode_access_token(&self, token: &str) -> Result<AccessTokenClaims, ErrorCode> {
@@ -142,7 +142,7 @@ impl JwtService for JwtServiceImpl {
         )
         .map_err(|err| {
             error!("Invalid JWT token: {}, error : {}", token, err.to_string());
-            ErrorCode::INVALID_JWT_TOKEN
+            ErrorCode::InvalidJwtToken
         });
 
         match token_data {
@@ -152,7 +152,7 @@ impl JwtService for JwtServiceImpl {
             }
             Err(err) => {
                 error!("Failed to decode access token");
-                Err(ErrorCode::INVALID_JWT_TOKEN)
+                Err(ErrorCode::InvalidJwtToken)
             }
         }
     }
@@ -170,7 +170,7 @@ impl JwtService for JwtServiceImpl {
         )
         .map_err(|_| {
             error!("Invalid JWT token: {}", token);
-            ErrorCode::INVALID_JWT_TOKEN
+            ErrorCode::InvalidJwtToken
         })?;
         Ok(token_data.claims)
     }

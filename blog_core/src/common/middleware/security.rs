@@ -94,7 +94,7 @@ pub async fn with_role_member(mut req: Request<Body>, next: Next) -> Result<Resp
     let exts = req.extensions_mut();
     let ctx = exts
         .get::<SecurityContext>()
-        .ok_or(ErrorCode::UNAUTHORIZED)?;
+        .ok_or(ErrorCode::Unauthorized)?;
 
     let mut satisfied = false;
 
@@ -110,7 +110,7 @@ pub async fn with_role_member(mut req: Request<Body>, next: Next) -> Result<Resp
         return Ok(next.run(req).await);
     } else {
         // 권한이 없는 경우 403 Forbidden 응답을 반환합니다.
-        return Err(ErrorCode::FORBIDDEN);
+        return Err(ErrorCode::Forbidden);
     }
 }
 
@@ -118,7 +118,7 @@ pub async fn with_role_admin(mut req: Request<Body>, next: Next) -> Result<Respo
     let exts = req.extensions_mut();
     let ctx = exts
         .get::<SecurityContext>()
-        .ok_or(ErrorCode::UNAUTHORIZED)?;
+        .ok_or(ErrorCode::Unauthorized)?;
 
     let mut satisfied = false;
 
@@ -134,6 +134,6 @@ pub async fn with_role_admin(mut req: Request<Body>, next: Next) -> Result<Respo
         return Ok(next.run(req).await);
     } else {
         // 권한이 없는 경우 403 Forbidden 응답을 반환합니다.
-        return Err(ErrorCode::FORBIDDEN);
+        return Err(ErrorCode::Forbidden);
     }
 }

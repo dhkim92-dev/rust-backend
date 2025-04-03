@@ -1,5 +1,5 @@
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, IntoResponseParts, ResponseParts};
 use axum::Json;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -29,7 +29,7 @@ pub struct ApiResponse<T> {
     pub message: String,
 }
 
-impl<T: Serialize> ReturnValue<T> {
+impl<T> ReturnValue<T> {
     pub fn new(status: u16, message: String, data: T) -> Self {
         ReturnValue {
             status,
@@ -78,14 +78,15 @@ impl<T> From<ReturnValue<T>> for ApiResponse<T> {
     }
 }
 
-impl From<ErrorCode> for ApiResponse<()> {
+impl From<ErrorCode> for ApiResponse<String> {
     fn from(error: ErrorCode) -> Self {
+        let (status, code, message) = error.cast();
         ApiResponse {
             timestamp: Utc::now().naive_utc(),
-            status: error.status,
+            status: status.as_u16(),
             data: None,
-            code: Some(error.code.to_string()),
-            message: error.message.to_string(),
+            code: Some(code.to_owned()),
+            message: message.to_owned(),
         }
     }
 }

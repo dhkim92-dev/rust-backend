@@ -54,7 +54,7 @@ impl MemberCreateUseCase for MemberCreateUseCaseImpl {
             .await?;
 
         if member.is_some() {
-            return Err(ErrorCode::EMAIL_ALREADY_EXISTS);
+            return Err(ErrorCode::EmailAlreadyExists);
         }
 
         let member_entity = MemberEntity {
@@ -90,7 +90,7 @@ impl MemberUpdateUseCase for MemberUpdateUseCaseImpl {
             .await?;
 
         if member.is_none() {
-            return Err(ErrorCode::NOT_FOUND);
+            return Err(ErrorCode::MemberNotFound);
         }
 
         let mut member_entity = member.unwrap();
@@ -117,13 +117,13 @@ impl MemberDeleteUseCase for MemberDeleteUseCaseImpl {
         let member = self.load_member_port.find_by_id(&txn, target_id).await?;
 
         if member.is_none() {
-            return Err(ErrorCode::NOT_FOUND);
+            return Err(ErrorCode::MemberNotFound);
         }
 
         //let member_entity = member.unwrap();
 
         if target_id != login_member.id {
-            return Err(ErrorCode::FORBIDDEN);
+            return Err(ErrorCode::Forbidden);
         }
 
         self.save_member_port.delete(&txn, target_id).await?;
