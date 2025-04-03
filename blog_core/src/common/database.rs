@@ -1,7 +1,5 @@
 use crate::config::AppConfig;
-use sea_orm::{
-    ConnectOptions, Database, DatabaseConnection, DatabaseTransaction, DbConn, TransactionTrait,
-};
+use sea_orm::{ConnectOptions, Database, DatabaseTransaction, DbConn, TransactionTrait};
 use shaku::{Component, Interface};
 use std::sync::Arc;
 use tracing::{error, info};
