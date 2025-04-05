@@ -176,20 +176,3 @@ impl JwtService for JwtServiceImpl {
     }
 }
 
-#[cfg(test)]
-mod jwt_tests {
-
-    use super::*;
-    use crate::config::*;
-    use clap::Parser;
-    use dotenvy::dotenv;
-    use std::{env, sync::Arc};
-
-    #[test]
-    fn create_access_token_test() {
-        let cfg = AppConfig::try_parse().unwrap_or_else(|_| AppConfig::parse_from(env::args()));
-        let svc = JwtServiceImpl {
-            config: Arc::new(ConfigProviderImpl(cfg.clone())),
-        };
-    }
-}

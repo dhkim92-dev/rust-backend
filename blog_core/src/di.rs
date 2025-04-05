@@ -9,6 +9,8 @@ use super::common::database::DbConnProviderImpl;
 use super::common::jwt::JwtServiceImpl;
 use super::config::ConfigProviderImpl;
 use super::domain::member::repository::{MemberCommandRepository, MemberQueryRepository};
+use super::domain::board::repository::{SeaOrmLoadBoardAdapter, SeaOrmSaveBoardAdapter};
+
 module! {
     pub AppContext {
         components = [
@@ -26,11 +28,15 @@ module! {
             MemberQueryRepository,
             MemberCommandRepository,
 
+            // Board,
+            SeaOrmLoadBoardAdapter,
+            SeaOrmSaveBoardAdapter,
 
             /* Member Service Related */
             MemberCreateUseCaseImpl,
             MemberDeleteUseCaseImpl,
             MemberUpdateUseCaseImpl,
+
             /* Board Service Related */
         ],
         providers = [

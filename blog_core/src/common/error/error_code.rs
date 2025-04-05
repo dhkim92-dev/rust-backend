@@ -11,6 +11,9 @@ pub enum ErrorCode {
     Forbidden,
     Conflict,
     DbError,
+
+    // 검증 에러
+    ValidationError,
     
     // 인증 관련 에러
     EmailPasswordMismatch,
@@ -37,6 +40,9 @@ impl ErrorCode {
             Self::InternalServerError=> (StatusCode::INTERNAL_SERVER_ERROR, "GE-006", "서버 내부 오류입니다."),
             Self::DbError => (StatusCode::INTERNAL_SERVER_ERROR, "GE-007", "DB 오류입니다."),
 
+            // 검증 에러
+            Self::ValidationError => (StatusCode::BAD_REQUEST, "GE-008", "검증 오류입니다."),
+
             /**
              * 인증 관련 에러
              */
@@ -46,6 +52,7 @@ impl ErrorCode {
 
             // 인가 관련 에러
             Self::NotEnoughPermission => (StatusCode::FORBIDDEN, "AE-004", "권한이 없습니다."),
+
             /**
              * 멤버 관련 에러
              */
