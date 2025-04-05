@@ -2,14 +2,16 @@ pub mod board_mapper {
     use sea_orm::ActiveValue::{NotSet, Set};
 
     use crate::domain::board::entity::command::board_entity::BoardEntity;
-    use crate::domain::board::schema::board::{ActiveModel as ActiveBoardModel, Model as BoardModel};
+    use crate::domain::board::schema::board::{
+        ActiveModel as ActiveBoardModel, Model as BoardModel,
+    };
 
     pub fn to_domain(orm_board: &BoardModel) -> BoardEntity {
         BoardEntity::new(
             Some(orm_board.id),
             orm_board.name.to_owned(),
             Some(orm_board.created_at.to_owned()),
-            orm_board.updated_at.to_owned()
+            orm_board.updated_at.to_owned(),
         )
     }
 
@@ -22,20 +24,18 @@ pub mod board_mapper {
             },
             name: Set(board_entity.get_name()),
             created_at: Set(board_entity.get_created_at()),
-            updated_at: Set(board_entity.get_updated_at())
+            updated_at: Set(board_entity.get_updated_at()),
         }
     }
 }
 
-pub mod post_mapper {
-
-}
+pub mod post_mapper {}
 
 #[cfg(test)]
 mod test {
     use super::board_mapper;
     use crate::domain::board::entity::command::board_entity::BoardEntity;
-    use crate::domain::board::schema::board::{Model as BoardModel};
+    use crate::domain::board::schema::board::Model as BoardModel;
 
     #[test]
     fn test_to_domain() {

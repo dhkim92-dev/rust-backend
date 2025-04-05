@@ -1,3 +1,3 @@
 pub mod command;
-pub mod query;
 pub mod mapper;
+pub mod query;

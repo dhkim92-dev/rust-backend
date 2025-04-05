@@ -5,9 +5,9 @@ use crate::common::database::DbConnProvider;
 use crate::common::error::error_code::ErrorCode as E;
 use crate::common::jwt::JwtService;
 use crate::domain::member::repository::LoadMemberPort;
-use uuid::Uuid;
 use shaku::Component;
 use std::sync::Arc;
+use uuid::Uuid;
 
 #[derive(Component)]
 #[shaku(interface = LoginUseCase)]
@@ -34,11 +34,7 @@ pub struct JwtUseCaseImpl {
 #[async_trait::async_trait]
 impl LoginUseCase for AuthService {
     async fn login(&self, command: LoginCommand) -> Result<LoginCommandResult, E> {
-        let txn = self
-            .db
-            .ro_txn()
-            .await
-            .map_err(|_| E::InternalServerError)?;
+        let txn = self.db.ro_txn().await.map_err(|_| E::InternalServerError)?;
         let member = self
             .load_member_port
             .find_by_email(&txn, &command.principal)

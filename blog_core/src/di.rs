@@ -1,3 +1,4 @@
+use crate::application::board::BoardCommandService;
 use crate::application::member::adapter::{
     MemberCreateUseCaseImpl, MemberDeleteUseCaseImpl, MemberUpdateUseCaseImpl,
 };
@@ -8,8 +9,8 @@ use super::application::auth::*;
 use super::common::database::DbConnProviderImpl;
 use super::common::jwt::JwtServiceImpl;
 use super::config::ConfigProviderImpl;
-use super::domain::member::repository::{MemberCommandRepository, MemberQueryRepository};
 use super::domain::board::repository::{SeaOrmLoadBoardAdapter, SeaOrmSaveBoardAdapter};
+use super::domain::member::repository::{MemberCommandRepository, MemberQueryRepository};
 
 module! {
     pub AppContext {
@@ -29,6 +30,7 @@ module! {
             MemberCommandRepository,
 
             // Board,
+            BoardCommandService,
             SeaOrmLoadBoardAdapter,
             SeaOrmSaveBoardAdapter,
 

@@ -1,5 +1,4 @@
 use crate::common::error_code::ErrorCode;
-use axum::extract::Extension;
 use axum::{body::Body, http::Request, middleware::Next, response::Response};
 use axum_extra::extract::cookie::CookieJar;
 use std::sync::Arc;

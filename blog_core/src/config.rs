@@ -65,7 +65,6 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
-    
     pub fn is_production(&self) -> bool {
         self.app_env == "prod"
     }

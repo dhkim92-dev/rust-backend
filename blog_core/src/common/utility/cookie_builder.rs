@@ -1,10 +1,9 @@
-use std::sync::Arc;
-use axum_extra::extract::cookie::Cookie;
 use crate::config::ConfigProvider;
+use axum_extra::extract::cookie::Cookie;
 use shaku::{Component, Interface};
+use std::sync::Arc;
 
 pub trait CookieBuilder: Interface {
-
     fn build(&self, name: &str, value: &str, max_age: Option<i64>) -> Cookie;
 }
 

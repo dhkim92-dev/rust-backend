@@ -1,6 +1,6 @@
-use sea_orm::ActiveModelBehavior;
-use sea_orm::entity::prelude::*;
 use chrono::NaiveDateTime;
+use sea_orm::entity::prelude::*;
+use sea_orm::ActiveModelBehavior;
 
 #[derive(Debug, Clone, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "article_category")]
@@ -16,4 +16,3 @@ pub struct Model {
 pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}
-

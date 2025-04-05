@@ -12,7 +12,6 @@ pub struct BoardEntity {
 
 /* public methods */
 impl BoardEntity {
-
     pub fn new(
         board_id: Option<u64>,
         name: String,
@@ -24,12 +23,15 @@ impl BoardEntity {
             name,
             created_at: created_at.unwrap_or_else(|| Utc::now().naive_utc()),
             updated_at,
-        }       
+        }
     }
 
     fn validate(&self) -> Result<bool, AppError> {
         if self.name.len() < 1 || self.name.len() > 15 {
-            return Err( AppError::with_message(ErrorCode::ValidationError, "이름은 2자 이상 14자 이하여야합니다.") );
+            return Err(AppError::with_message(
+                ErrorCode::ValidationError,
+                "이름은 2자 이상 14자 이하여야합니다.",
+            ));
         }
 
         Ok(true)
@@ -40,7 +42,7 @@ impl BoardEntity {
     }
 
     pub fn get_updated_at(&self) -> Option<NaiveDateTime> {
-        self.updated_at 
+        self.updated_at
     }
 
     pub fn get_name(&self) -> String {
@@ -53,7 +55,10 @@ impl BoardEntity {
 
     pub fn change_board_name(&mut self, name: &str) -> Result<(), AppError> {
         if name.len() < 1 || name.len() > 15 {
-            return Err(AppError::with_message(ErrorCode::ValidationError, "이름은 2자 이상 14자 이하여야합니다."));
+            return Err(AppError::with_message(
+                ErrorCode::ValidationError,
+                "이름은 2자 이상 14자 이하여야합니다.",
+            ));
         }
         self.name = name.to_owned();
         Ok(())
@@ -65,7 +70,10 @@ impl BoardEntity {
             self.updated_at = Some(Utc::now().naive_utc());
             Ok(true)
         } else {
-            Err(AppError::with_message(ErrorCode::ValidationError, "Invalid board name"))
+            Err(AppError::with_message(
+                ErrorCode::ValidationError,
+                "Invalid board name",
+            ))
         }
     }
 }
@@ -90,4 +98,3 @@ mod test {
         assert_eq!(board.get_name(), "test2".to_string());
     }
 }
-
