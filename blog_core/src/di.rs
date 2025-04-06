@@ -1,3 +1,4 @@
+use crate::application::board::{BoardCreateUsecaseImpl, BoardDeleteUsecaseImpl, BoardModifyUsecaseImpl};
 use crate::application::member::adapter::{
     MemberCreateUseCaseImpl, MemberDeleteUseCaseImpl, MemberUpdateUseCaseImpl,
 };
@@ -8,7 +9,9 @@ use super::application::auth::*;
 use super::common::database::DbConnProviderImpl;
 use super::common::jwt::JwtServiceImpl;
 use super::config::ConfigProviderImpl;
+use super::domain::board::repository::{SeaOrmLoadBoardAdapter, SeaOrmSaveBoardAdapter};
 use super::domain::member::repository::{MemberCommandRepository, MemberQueryRepository};
+
 module! {
     pub AppContext {
         components = [
@@ -26,11 +29,18 @@ module! {
             MemberQueryRepository,
             MemberCommandRepository,
 
+            // Board,
+            BoardCreateUsecaseImpl,
+            BoardModifyUsecaseImpl,
+            BoardDeleteUsecaseImpl,
+            SeaOrmLoadBoardAdapter,
+            SeaOrmSaveBoardAdapter,
 
             /* Member Service Related */
             MemberCreateUseCaseImpl,
             MemberDeleteUseCaseImpl,
             MemberUpdateUseCaseImpl,
+
             /* Board Service Related */
         ],
         providers = [

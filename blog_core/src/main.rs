@@ -20,7 +20,7 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
-    
+
     let cfg = AppConfig::try_parse().unwrap_or_else(|_| AppConfig::parse_from(env::args()));
     let cfg: Arc<AppConfig> = Arc::new(cfg);
     let db = database::init_db(cfg.clone()).await;

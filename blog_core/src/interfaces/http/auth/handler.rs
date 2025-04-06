@@ -15,7 +15,6 @@ use crate::common::CookieBuilder;
 use crate::config::ConfigProvider;
 use crate::di::AppContext;
 
-
 pub async fn reissue_jwt(
     jar: CookieJar,
     State(ctx): State<Arc<AppContext>>,
@@ -40,8 +39,13 @@ pub async fn reissue_jwt(
             let payload = JwtReissueResponse {
                 access_token: jwt_result.access_token,
             };
-            Ok((jar, 
-                ReturnValue::new(201, "access token 재발급에 성공하였습니다.".to_string(), payload),
+            Ok((
+                jar,
+                ReturnValue::new(
+                    201,
+                    "access token 재발급에 성공하였습니다.".to_string(),
+                    payload,
+                ),
             ))
         }
         Err(err) => {
@@ -76,18 +80,17 @@ pub async fn login(
         refresh_token: result.refresh_token,
     };
 
-
-    let mut refresh_token_cookie = Cookie::new(
-        "refresh-token",
-        payload.refresh_token.clone()
-    );
+    let mut refresh_token_cookie = Cookie::new("refresh-token", payload.refresh_token.clone());
     refresh_token_cookie.set_path("/");
     refresh_token_cookie.set_http_only(cfg.is_production());
     refresh_token_cookie.set_secure(cfg.is_production());
-    refresh_token_cookie.set_max_age(time::Duration::milliseconds(cfg.jwt_refresh_token_expire as i64));
+    refresh_token_cookie.set_max_age(time::Duration::milliseconds(
+        cfg.jwt_refresh_token_expire as i64,
+    ));
 
     jar = jar.add(refresh_token_cookie.clone());
-    Ok((jar,
+    Ok((
+        jar,
         ReturnValue::new(201, "로그인에 성공하였습니다.".to_string(), payload),
     ))
 }

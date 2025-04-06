@@ -2,6 +2,9 @@
 name = "blog_core"
 version = "0.1.0"
 edition = "2021"
+
+[dev-dependencies]
+sea-orm = { version = "^0.12.15", features = ["sqlx-postgres", "runtime-tokio-rustls", "mock"] }
 [dependencies]
 axum = "0.8.1"
 axum-extra = { version = "0.10.1", features = ["cookie"] }

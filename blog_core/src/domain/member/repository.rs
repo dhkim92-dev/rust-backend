@@ -1,12 +1,11 @@
 use sea_orm::prelude::async_trait::async_trait;
 use sea_orm::*;
 // use std::sync::Arc;
-use uuid::Uuid;
-
 use super::entity::MemberEntity;
 use super::mapper::MemberMapper;
 use super::schema::{Column, Entity as Member}; //, Model as MemberModel};
 use shaku::{Component, Interface};
+use uuid::Uuid;
 
 #[async_trait]
 pub trait LoadMemberPort: Interface {

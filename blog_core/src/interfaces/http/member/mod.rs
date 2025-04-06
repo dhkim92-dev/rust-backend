@@ -1,10 +1,7 @@
 mod handler;
 use crate::{common::middleware::security::with_role_member, di::AppContext};
 use axum::routing::{delete, post, put};
-use axum::{
-    middleware::from_fn,
-    Router,
-};
+use axum::{middleware::from_fn, Router};
 use handler::{create_new_member, delete_member, update_member_info};
 use std::sync::Arc;
 

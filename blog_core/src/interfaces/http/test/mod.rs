@@ -28,5 +28,7 @@ async fn handler() -> impl IntoResponse {
 }
 
 pub fn router(ctx: Arc<AppContext>) -> Router {
-    Router::new().route("/", axum::routing::get(handler))
+    Router::new()
+        .route("/", axum::routing::get(handler))
+        .with_state(ctx.clone())
 }
