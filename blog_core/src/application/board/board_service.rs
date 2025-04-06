@@ -8,7 +8,7 @@ use crate::{
 use shaku::Component;
 use std::sync::Arc;
 
-use super::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, CreateBoardCommand, ModifyBoardCommand};
+use super::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, BoardQueryUsecase, CreateBoardCommand, ModifyBoardCommand, QBoardDto};
 
 #[derive(Component)]
 #[shaku(interface = BoardCreateUsecase)]
@@ -41,6 +41,15 @@ pub struct BoardDeleteUsecaseImpl {
     load_board_port: Arc<dyn LoadBoardPort>,
     #[shaku(inject)]
     save_board_port: Arc<dyn SaveBoardPort>,
+}
+
+#[derive(Component)]
+#[shaku(interface = BoardQueryUsecase)]
+pub struct BoardQueryUsecaseImpl {
+    #[shaku(inject)]
+    db: Arc<dyn DbConnProvider>,
+    #[shaku(inject)]
+    load_board_port: Arc<dyn LoadBoardPort>,
 }
 
 #[async_trait::async_trait]
@@ -125,3 +134,19 @@ impl BoardDeleteUsecase for BoardDeleteUsecaseImpl {
         Ok(())
     }
 }
+
+#[async_trait::async_trait]
+impl BoardQueryUsecase for BoardQueryUsecaseImpl {
+    async fn get_all(&self) -> Result<Vec<QBoardDto>, AppError> {
+        let txn = self.db.rw_txn().await?;
+        tracing::debug!("boards query transaction start");
+        let boards = self.load_board_port.find_all(&txn).await?;
+        txn.commit().await;
+
+        tracing::debug!("boards query transaction complete");
+        Ok(boards.into_iter()
+            .map(|board| QBoardDto::from(board))
+            .collect())
+    }
+}
+

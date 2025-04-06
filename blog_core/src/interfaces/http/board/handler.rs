@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    application::board::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, CreateBoardCommand, ModifyBoardCommand},
+    application::{auth::usecases, board::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, BoardQueryUsecase, CreateBoardCommand, ModifyBoardCommand, QBoardDto}},
     common::{AppError, LoginMember, ReturnValue},
     di::AppContext,
 };
@@ -50,6 +50,44 @@ pub async fn delete_board(
     usecase.delete(login_member, id).await?;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn get_boards_list(
+    State(ctx): State<Arc<AppContext>>,
+) -> Result<impl IntoResponse, AppError> {
+     let usecase: &dyn BoardQueryUsecase = ctx.resolve_ref();
+    tracing::debug!("boards query request");
+    
+    let boards = usecase.get_all().await?;
+    tracing::debug!("boards query request done");
+    
+    let boards: Vec<BoardQueryResponse> = boards
+        .into_iter()
+        .map(|board| BoardQueryResponse::from(board))
+        .collect();
+
+    Ok(ReturnValue::new(
+        200,
+        "게시판 목록을 가져왔습니다.".to_owned(),
+        boards,
+    )) 
+}
+
+#[derive(serde::Serialize)]
+pub struct BoardQueryResponse {
+    id: i64,
+    name: String,
+    count: i64,
+}
+
+impl From<QBoardDto> for BoardQueryResponse {
+    fn from(board: QBoardDto) -> Self {
+        BoardQueryResponse {
+            id: board.id,
+            name: board.name,
+            count: board.count,
+        }
+    }
 }
 
 #[derive(serde::Serialize)]

@@ -1,19 +1,30 @@
-use crate::common::error_code::ErrorCode;
-use crate::common::AppError;
 use sea_orm::prelude::*;
+use sea_orm::sea_query::Alias;
+use sea_orm::sea_query::Func;
+use sea_orm::sea_query::Query;
 use sea_orm::ActiveModelTrait;
-use sea_orm::{DatabaseTransaction, DbErr, EntityTrait, IntoActiveModel, Set};
+use sea_orm::Condition;
+use sea_orm::JoinType;
+use sea_orm::QueryOrder;
+use sea_orm::QuerySelect;
+use sea_orm::{DatabaseTransaction, DbErr, EntityTrait, ColumnTrait, IntoActiveModel, Set};
 use shaku::{Component, Interface};
 
-use super::entity::command::board_entity::BoardEntity;
-use super::entity::mapper::board_mapper;
-use super::schema::board::{Entity as Board, Model as BoardModel};
+use crate::application::board::QBoardDto;
+use crate::domain::board::entity::command::board_entity::BoardEntity;
+use crate::domain::board::entity::mapper::board_mapper;
+use crate::domain::board::entity::query::QBoardEntity;
+use crate::domain::board::schema::board;
+use crate::domain::board::schema::post;
+use crate::domain::member::schema::Entity;
 use std::option::Option;
 use std::result::Result;
 
 #[async_trait::async_trait]
 pub trait LoadBoardPort: Interface {
     async fn load_entity_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity>;
+
+    async fn find_all(&self,txn: &DatabaseTransaction) -> Result<Vec<QBoardEntity>, DbErr>;
 
     // async fn find_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity>;
 
@@ -44,20 +55,49 @@ pub struct SeaOrmLoadBoardAdapter {}
 #[async_trait::async_trait]
 impl LoadBoardPort for SeaOrmLoadBoardAdapter {
     async fn load_entity_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity> {
-        Board::find_by_id(id)
+        board::Entity::find_by_id(id)
             .one(txn)
             .await
             .ok()
             .and_then(|x| x.map(|x| board_mapper::to_domain(&x)))
     }
 
-    // async fn find_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity> {
-    // BoardEntity::find_by_id(txn, id).await
-    // }
+    async fn find_all(&self, txn: &DatabaseTransaction) -> Result<Vec<QBoardEntity>, DbErr> {
+        // SELECT b.id, b.name, count(p) 
+        // FROM board b 
+        //   LEFT JOIN post p 
+        //   ON b.id = p.category_id
+        // GROUP BY b.id
+        // ORDER BY b.id ASC; 
+        // let count_expr = Func::count(Expr::col(post::Column::Id));
+        /* let raw_sql = "
+            SELECT b.id, b.name, count(p.id) as count 
+            FROM article_category b
+            LEFT JOIN article p ON b.id = p.category_id
+            GROUP BY b.id
+            ORDER BY b.id ASC;
+        ";
 
-    // async fn find_by_name(&self, txn: &DatabaseTransaction, name: &String) -> Option<BoardEntity> {
-    // BoardEntity::find_by_name(txn, name).awai
-    // }
+        let query_result: QueryResult =  */
+
+        let result = board::Entity::find()
+            .select_only()
+            .column(board::Column::Id)
+            .column(board::Column::Name)
+            .column_as(post::Column::Id.count(), "count")
+            .join(
+                JoinType::LeftJoin,
+                board::Relation::Post.def()
+            )
+            .group_by(board::Column::Id)
+            .order_by_asc(board::Column::Id)
+            .into_model::<QBoardEntity>()
+            .all(txn)
+            .await?;
+        tracing::debug!("function name: SeaOrmLoadBoardAdapter::find_all");
+
+        Ok(Vec::from(result))
+    }
 }
 
 #[derive(Component)]
@@ -102,7 +142,7 @@ impl SaveBoardPort for SeaOrmSaveBoardAdapter {
     }
 
     async fn delete(&self, txn: &DatabaseTransaction, id: i64) -> Result<(), DbErr> {
-        Board::delete_by_id(id).exec(txn).await.map(|_| ())
+        board::Entity::delete_by_id(id).exec(txn).await.map(|_| ())
     }
 }
 

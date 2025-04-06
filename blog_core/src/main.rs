@@ -19,6 +19,7 @@ async fn main() {
     dotenv().ok();
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
+        .with_test_writer()
         .init();
 
     let cfg = AppConfig::try_parse().unwrap_or_else(|_| AppConfig::parse_from(env::args()));
