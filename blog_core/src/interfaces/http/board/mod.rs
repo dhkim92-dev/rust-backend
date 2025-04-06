@@ -1,6 +1,7 @@
 pub mod handler;
 
 use axum::routing::put;
+use axum::Router;
 use axum::{middleware::from_fn, routing::post};
 use handler::*;
 use std::sync::Arc;
@@ -8,7 +9,7 @@ use std::sync::Arc;
 use crate::{common::with_role_admin, di::AppContext};
 
 pub fn router(ctx: Arc<AppContext>) -> axum::Router {
-    axum::Router::new()
+    let command_router = axum::Router::new()
         .route(
             "/",
             post(create_board)
@@ -22,6 +23,16 @@ pub fn router(ctx: Arc<AppContext>) -> axum::Router {
             axum::routing::delete(delete_board)
         )
         .layer(from_fn(with_role_admin))
+        .with_state(ctx.clone());
 
-        .with_state(ctx.clone())
+    let query_router = axum::Router::new()
+        .route(
+            "/",
+            axum::routing::get(get_boards_list)
+        )
+        .with_state(ctx.clone());
+
+    Router::new()
+        .merge(command_router)
+        .merge(query_router)
 }
