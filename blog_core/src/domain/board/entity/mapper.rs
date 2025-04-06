@@ -29,7 +29,47 @@ pub mod board_mapper {
     }
 }
 
-pub mod post_mapper {}
+pub mod post_mapper {
+
+    use sea_orm::ActiveValue::{NotSet, Set};
+    use uuid::Uuid;
+
+    use crate::domain::board::entity::command::post_entity::{PostEntity, PostEntityBuilder};
+    use crate::domain::board::schema::post::{
+        ActiveModel as ActivePostModel, Model as PostModel,
+    };
+
+    pub fn to_domain(orm_post: &PostModel) -> PostEntity {
+        PostEntityBuilder::default()
+            .id(Some(orm_post.id))
+            .category_id(orm_post.category_id)
+            .member_id(orm_post.member_id)
+            .title(orm_post.title.to_owned())
+            .contents(orm_post.contents.to_owned())
+            .view_count(orm_post.view_count)
+            .created_at(orm_post.created_at)
+            .updated_at(orm_post.updated_at)
+            .build()
+            .unwrap()
+    }
+
+    pub fn to_orm(post_entity: &PostEntity) -> ActivePostModel {
+        ActivePostModel {
+            id: if post_entity.get_id().is_some() {
+                Set(post_entity.get_id().unwrap())
+            } else {
+                Set(Uuid::new_v4())
+            },
+            member_id: Set(post_entity.get_member_id()),
+            category_id: Set(post_entity.get_category_id()),
+            title: Set(post_entity.get_title()),
+            contents: Set(post_entity.get_contents()),
+            view_count: Set(post_entity.get_view_count()),
+            created_at: Set(post_entity.get_created_at()),
+            updated_at: Set(post_entity.get_updated_at()),
+        }
+    }
+}
 
 #[cfg(test)]
 mod test {

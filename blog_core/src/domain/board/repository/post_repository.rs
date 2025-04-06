@@ -4,6 +4,7 @@ use shaku::Interface;
 use sea_orm::entity::*;
 use sea_orm::prelude::*;
 use crate::domain::board::entity::command::post_entity::PostEntity;
+use crate::domain::board::entity::mapper::post_mapper;
 use crate::domain::board::entity::query::QPostEntity;
 
 
@@ -18,11 +19,11 @@ pub trait LoadPostPort: Interface {
 #[async_trait::async_trait]
 pub trait SavePostPort: Interface {
 
-    fn save(&self, txn: &DatabaseTransaction, post: PostEntity) -> Result<PostEntity, DbErr>;
+    async fn save(&self, txn: &DatabaseTransaction, post: PostEntity) -> Result<PostEntity, DbErr>;
 
-    fn update(&self, txn: &DatabaseTransaction, post: PostEntity) -> Result<PostEntity, DbErr>;
+    async fn update(&self, txn: &DatabaseTransaction, post: PostEntity) -> Result<PostEntity, DbErr>;
 
-    fn delete(&self, txn: &DatabaseTransaction, id: Uuid) -> Result<(), DbErr>;
+    async fn delete(&self, txn: &DatabaseTransaction, id: Uuid) -> Result<(), DbErr>;
 }
 
 #[derive(Component)]
@@ -64,7 +65,7 @@ impl LoadPostPort for SeaOrmLoadPostAdapter {
 
 #[async_trait::async_trait]
 impl SavePostPort for SeaOrmSavePostAdapter {
-    fn save(&self, txn: &DatabaseTransaction, post: PostEntity) -> Result<PostEntity, DbErr> {
+    async fn save(&self, txn: &DatabaseTransaction, post: PostEntity) -> Result<PostEntity, DbErr> {
         /* let new_post = post::ActiveModel {
             id: Set(post.id),
             title: Set(post.title),
@@ -72,13 +73,18 @@ impl SavePostPort for SeaOrmSavePostAdapter {
             category_id: Set(post.category_id),
             member_id: Set(post.member_id),
             ..Default::default()
-        };
-
-        new_post.insert(txn).await.map(|x| board_mapper::to_domain(&x)) */
-        Err(DbErr::UnpackInsertId)
+        };*/
+        let new_post = post_mapper::to_orm(&post);
+        tracing::debug!("new_post: {:?}", new_post);
+        new_post.insert(txn).await
+            .map_err(|e| {
+                tracing::error!("Error inserting post: {:?}", e);
+                DbErr::UnpackInsertId
+            })
+            .map(|x| post_mapper::to_domain(&x))
     }
 
-    fn update(&self, txn: &DatabaseTransaction, post: PostEntity) -> Result<PostEntity, DbErr> {
+    async fn update(&self, txn: &DatabaseTransaction, post: PostEntity) -> Result<PostEntity, DbErr> {
         /* let mut active_model = post::ActiveModel {
             id: Set(post.id),
             title: Set(post.title),
@@ -92,7 +98,7 @@ impl SavePostPort for SeaOrmSavePostAdapter {
         Err(DbErr::UnpackInsertId)
     }
 
-    fn delete(&self, txn: &DatabaseTransaction, id: Uuid) -> Result<(), DbErr> {
+    async fn delete(&self, txn: &DatabaseTransaction, id: Uuid) -> Result<(), DbErr> {
         /* let active_model = post::ActiveModel {
             id: Set(id),
             ..Default::default()

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    application::{board::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, BoardQueryUsecase, CreateBoardCommand, ModifyBoardCommand, QBoardDto}},
+    application::board::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, BoardQueryUsecase, CreateBoardCommand, CreatePostCommand, ModifyBoardCommand, QBoardDto},
     common::{AppError, LoginMember, ReturnValue},
     di::AppContext,
 };
@@ -126,3 +126,4 @@ impl Into<ModifyBoardCommand> for ModifyBoardRequest {
         ModifyBoardCommand { name: self.name }
     }
 }
+

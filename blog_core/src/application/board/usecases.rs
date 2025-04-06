@@ -2,6 +2,7 @@ use crate::{
     common::{AppError, LoginMember},
     domain::board::entity::{command::{board_entity::BoardEntity, post_entity::PostEntity}, query::QBoardEntity},
 };
+use chrono::NaiveDateTime;
 use shaku::Interface;
 use uuid::Uuid;
 
@@ -46,8 +47,8 @@ pub struct PostDto {
     pub title: String,
     pub contents: String,
     pub category_id: i64,
-    pub created_at: String,
-    pub updated_at: Option<Uuid>
+    pub created_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
 }
 
 pub struct WriterVo {
@@ -101,6 +102,21 @@ impl From<QPostEntity> for QPostDto {
     }
 }
  */
+
+impl From<PostEntity> for PostDto {
+    fn from(entity: PostEntity) -> Self {
+        PostDto {
+            id: entity.get_id().expect("Id field is required"),
+            writer_id: entity.get_member_id(),
+            title: entity.get_title(),
+            contents: entity.get_contents(),
+            category_id: entity.get_category_id(),
+            created_at: entity.get_created_at(),
+            updated_at: entity.get_updated_at()
+        }
+    }
+}
+
 impl From<QBoardEntity> for QBoardDto {
     fn from(entity: QBoardEntity) -> Self {
         QBoardDto {
@@ -153,15 +169,36 @@ pub trait BoardDeleteUsecase: Interface {
     ) -> Result<(), AppError>;
 }
 
-/* #[async_trait::async_trait]
-pub trait BoardCommandUsecase: Interface {
+#[async_trait::async_trait]
+pub trait PostCreateUsecase: Interface {
     async fn create(
         &self,
         login_member: LoginMember,
-        command: CreateBoardCommand,
-    ) -> Result<BoardDto, AppError>;
+        command: CreatePostCommand,
+    ) -> Result<PostDto, AppError>;
+}
 
-    async fn modify(&self, id: i64, command: ModifyCategoryCommand) -> Result<BoardDto, AppError>;
-//
-    //async fn delete(&self, id: u64) -> Result<(), String>;
-} */
+#[async_trait::async_trait]
+pub trait PostModifyUsecase: Interface {
+    async fn modify(
+        &self,
+        login_member: LoginMember,
+        id: Uuid,
+        command: ModifyPostCommand,
+    ) -> Result<PostDto, AppError>;
+}
+
+#[async_trait::async_trait]
+pub trait PostDeleteUsecase: Interface {
+    async fn delete(
+        &self,
+        login_member: LoginMember,
+        id: Uuid,
+    ) -> Result<(), AppError>;
+}
+
+/* 
+#[async_trait::async_trait]
+pub trait PostQueryUsecase: Interface {
+}
+*/

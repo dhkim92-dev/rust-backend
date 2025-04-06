@@ -50,6 +50,8 @@ pub struct AppConfig {
     pub jwt_access_token_secret: String,
     #[arg(long, default_value = "test-refresh-token-secret")]
     pub jwt_refresh_token_secret: String,
+    // 100년
+    // #[arg(long, default_value_t = 3153600000000)]
     #[arg(long, default_value_t = 900000)]
     pub jwt_access_token_expire: u64,
     #[arg(long, default_value_t = 604800000)]
