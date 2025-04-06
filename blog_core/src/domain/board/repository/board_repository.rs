@@ -1,22 +1,16 @@
 use sea_orm::prelude::*;
-use sea_orm::sea_query::Alias;
-use sea_orm::sea_query::Func;
-use sea_orm::sea_query::Query;
 use sea_orm::ActiveModelTrait;
-use sea_orm::Condition;
 use sea_orm::JoinType;
 use sea_orm::QueryOrder;
 use sea_orm::QuerySelect;
 use sea_orm::{DatabaseTransaction, DbErr, EntityTrait, ColumnTrait, IntoActiveModel, Set};
 use shaku::{Component, Interface};
 
-use crate::application::board::QBoardDto;
 use crate::domain::board::entity::command::board_entity::BoardEntity;
 use crate::domain::board::entity::mapper::board_mapper;
 use crate::domain::board::entity::query::QBoardEntity;
 use crate::domain::board::schema::board;
 use crate::domain::board::schema::post;
-use crate::domain::member::schema::Entity;
 use std::option::Option;
 use std::result::Result;
 
@@ -25,10 +19,6 @@ pub trait LoadBoardPort: Interface {
     async fn load_entity_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity>;
 
     async fn find_all(&self,txn: &DatabaseTransaction) -> Result<Vec<QBoardEntity>, DbErr>;
-
-    // async fn find_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity>;
-
-    // async fn find_by_name(&self, txn: &DatabaseTransaction, name: &String) -> Option<BoardEntity>;
 }
 
 #[async_trait::async_trait]

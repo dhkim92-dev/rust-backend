@@ -1,6 +1,6 @@
 use axum::extract::State;
 use axum::response::IntoResponse;
-use axum::{Extension, Json};
+use axum::Json;
 use axum_extra::extract::{cookie::Cookie, CookieJar};
 use shaku::HasComponent;
 use std::sync::Arc;

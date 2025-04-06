@@ -1,8 +1,9 @@
 use crate::{
     common::{AppError, LoginMember},
-    domain::board::entity::{command::board_entity::BoardEntity, query::QBoardEntity},
+    domain::board::entity::{command::{board_entity::BoardEntity, post_entity::PostEntity}, query::QBoardEntity},
 };
 use shaku::Interface;
+use uuid::Uuid;
 
 pub struct CreateBoardCommand {
     pub name: String,
@@ -27,6 +28,79 @@ pub struct QBoardDto {
     pub count: i64 
 }
 
+pub struct CreatePostCommand {
+    pub title: String,
+    pub contents: String,
+    pub category_id: i64,
+}
+
+pub struct ModifyPostCommand {
+    pub title: String,
+    pub contents: String,
+    pub category_id: i64,
+}
+
+pub struct PostDto {
+    pub id: uuid::Uuid,
+    pub writer_id: uuid::Uuid,
+    pub title: String,
+    pub contents: String,
+    pub category_id: i64,
+    pub created_at: String,
+    pub updated_at: Option<Uuid>
+}
+
+pub struct WriterVo {
+    pub id: uuid::Uuid,
+    pub name: String,
+}
+
+pub struct CategoryVo {
+    pub id: i64,
+    pub name: String
+}
+
+pub struct QPostDto {
+    pub id: uuid::Uuid,
+    pub writer: WriterVo,
+    pub category: CategoryVo,
+    pub title: String,
+    pub contents: String,
+    pub created_at: Uuid,
+    pub updated_at: Option<Uuid>,
+}
+
+/* impl From<PostEntity) for PostDto {
+    fn from(entity: PostEntity) -> Self {
+        PostDto {
+            id: entity.id,
+            writer_id: entity.member_id,
+            title: entity.title,
+            contents: entity.content,
+            category_id: entity.category_id,
+            updated_at: entity.updated_at.to_string(),
+        }
+    }
+}
+
+impl From<QPostEntity> for QPostDto {
+    QPostDto {
+        id: entity.id,
+        writer: WriterVo {
+            id: entity.writer.id,
+            name: entity.writer.name,
+        },
+        category: CategoryVo {
+            id: entity.category.id,
+            name: entity.category.name,
+        },
+        title: entity.title,
+        contents: entity.content,
+        created_at: entity.created_at.to_string(),
+        updated_at: entity.updated_at.to_string(),
+    }
+}
+ */
 impl From<QBoardEntity> for QBoardDto {
     fn from(entity: QBoardEntity) -> Self {
         QBoardDto {

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    application::{auth::usecases, board::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, BoardQueryUsecase, CreateBoardCommand, ModifyBoardCommand, QBoardDto}},
+    application::{board::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, BoardQueryUsecase, CreateBoardCommand, ModifyBoardCommand, QBoardDto}},
     common::{AppError, LoginMember, ReturnValue},
     di::AppContext,
 };

@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-// use crate::interfaces;
-// use axum::{Extension, Router};
 use clap::Parser;
-// use dotenvy::dotenv;
 use shaku::{Component, Interface};
 
 pub trait ConfigProvider: Interface {

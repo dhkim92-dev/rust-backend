@@ -1,6 +1,5 @@
 use sea_orm::prelude::async_trait::async_trait;
 use sea_orm::*;
-// use std::sync::Arc;
 use super::entity::MemberEntity;
 use super::mapper::MemberMapper;
 use super::schema::{Column, Entity as Member}; //, Model as MemberModel};
@@ -54,7 +53,7 @@ impl SaveMemberPort for MemberCommandRepository {
         txn: &DatabaseTransaction,
         member: MemberEntity,
     ) -> Result<MemberEntity, DbErr> {
-        let mut orm_entity = MemberMapper::to_orm(&member).into_active_model();
+        let orm_entity = MemberMapper::to_orm(&member).into_active_model();
         let result = orm_entity.insert(txn).await?;
         Ok(MemberMapper::to_domain(&result))
     }
