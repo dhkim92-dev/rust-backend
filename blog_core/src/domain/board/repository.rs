@@ -13,9 +13,9 @@ use std::result::Result;
 
 #[async_trait::async_trait]
 pub trait LoadBoardPort: Interface {
-    async fn load_entity_by_id(&self, txn: &DatabaseTransaction, id: u64) -> Option<BoardEntity>;
+    async fn load_entity_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity>;
 
-    // async fn find_by_id(&self, txn: &DatabaseTransaction, id: u64) -> Option<BoardEntity>;
+    // async fn find_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity>;
 
     // async fn find_by_name(&self, txn: &DatabaseTransaction, name: &String) -> Option<BoardEntity>;
 }
@@ -34,7 +34,7 @@ pub trait SaveBoardPort: Interface {
         board: BoardEntity,
     ) -> Result<BoardEntity, DbErr>;
 
-    async fn delete(&self, txn: &DatabaseTransaction, id: u64) -> Result<(), DbErr>;
+    async fn delete(&self, txn: &DatabaseTransaction, id: i64) -> Result<(), DbErr>;
 }
 
 #[derive(Component)]
@@ -43,7 +43,7 @@ pub struct SeaOrmLoadBoardAdapter {}
 
 #[async_trait::async_trait]
 impl LoadBoardPort for SeaOrmLoadBoardAdapter {
-    async fn load_entity_by_id(&self, txn: &DatabaseTransaction, id: u64) -> Option<BoardEntity> {
+    async fn load_entity_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity> {
         Board::find_by_id(id)
             .one(txn)
             .await
@@ -51,7 +51,7 @@ impl LoadBoardPort for SeaOrmLoadBoardAdapter {
             .and_then(|x| x.map(|x| board_mapper::to_domain(&x)))
     }
 
-    // async fn find_by_id(&self, txn: &DatabaseTransaction, id: u64) -> Option<BoardEntity> {
+    // async fn find_by_id(&self, txn: &DatabaseTransaction, id: i64) -> Option<BoardEntity> {
     // BoardEntity::find_by_id(txn, id).await
     // }
 
@@ -72,10 +72,13 @@ impl SaveBoardPort for SeaOrmSaveBoardAdapter {
         board: BoardEntity,
     ) -> Result<BoardEntity, DbErr> {
         board_mapper::to_orm(&board)
-            .into_active_model()
             .insert(txn)
             .await
             .map(|x| board_mapper::to_domain(&x))
+            .map_err(|e| {
+                eprintln!("Failed to save board: {}", e);
+                e
+            })
     }
 
     async fn update(
@@ -98,7 +101,7 @@ impl SaveBoardPort for SeaOrmSaveBoardAdapter {
             .map(|x| board_mapper::to_domain(&x))
     }
 
-    async fn delete(&self, txn: &DatabaseTransaction, id: u64) -> Result<(), DbErr> {
+    async fn delete(&self, txn: &DatabaseTransaction, id: i64) -> Result<(), DbErr> {
         Board::delete_by_id(id).exec(txn).await.map(|_| ())
     }
 }

@@ -4,7 +4,7 @@ use chrono::{NaiveDateTime, Utc};
 
 #[derive(Debug, Clone)]
 pub struct BoardEntity {
-    board_id: Option<u64>,
+    board_id: Option<i64>,
     name: String,
     created_at: NaiveDateTime,
     updated_at: Option<NaiveDateTime>,
@@ -13,7 +13,7 @@ pub struct BoardEntity {
 /* public methods */
 impl BoardEntity {
     pub fn new(
-        board_id: Option<u64>,
+        board_id: Option<i64>,
         name: String,
         created_at: Option<NaiveDateTime>,
         updated_at: Option<NaiveDateTime>,
@@ -26,13 +26,25 @@ impl BoardEntity {
         }
     }
 
-    fn validate(&self) -> Result<bool, AppError> {
-        if self.name.len() < 1 || self.name.len() > 15 {
+    fn validate_name(&self, name: &str) -> Result<bool, AppError> {
+        if name.is_empty() {
+            return Err(AppError::with_message(
+                ErrorCode::ValidationError,
+                "이름은 필수입니다.",
+            ));
+        }
+
+        if name.chars().count() < 2 || name.chars().count() > 14 {
             return Err(AppError::with_message(
                 ErrorCode::ValidationError,
                 "이름은 2자 이상 14자 이하여야합니다.",
             ));
         }
+        Ok(true)
+    }
+
+    fn validate(&self) -> Result<bool, AppError> {
+        self.validate_name(&self.name)?;
 
         Ok(true)
     }
@@ -49,17 +61,15 @@ impl BoardEntity {
         self.name.clone()
     }
 
-    pub fn get_id(&self) -> Option<u64> {
+    pub fn get_id(&self) -> Option<i64> {
         self.board_id
     }
 
     pub fn change_board_name(&mut self, name: &str) -> Result<(), AppError> {
-        if name.len() < 1 || name.len() > 15 {
-            return Err(AppError::with_message(
-                ErrorCode::ValidationError,
-                "이름은 2자 이상 14자 이하여야합니다.",
-            ));
-        }
+        let _ =  self.validate_name(name)?;
+
+        
+
         self.name = name.to_owned();
         Ok(())
     }

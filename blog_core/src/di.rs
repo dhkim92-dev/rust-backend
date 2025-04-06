@@ -1,4 +1,4 @@
-use crate::application::board::BoardCommandService;
+use crate::application::board::{BoardCreateUsecaseImpl, BoardDeleteUsecaseImpl, BoardModifyUsecaseImpl};
 use crate::application::member::adapter::{
     MemberCreateUseCaseImpl, MemberDeleteUseCaseImpl, MemberUpdateUseCaseImpl,
 };
@@ -30,7 +30,9 @@ module! {
             MemberCommandRepository,
 
             // Board,
-            BoardCommandService,
+            BoardCreateUsecaseImpl,
+            BoardModifyUsecaseImpl,
+            BoardDeleteUsecaseImpl,
             SeaOrmLoadBoardAdapter,
             SeaOrmSaveBoardAdapter,
 

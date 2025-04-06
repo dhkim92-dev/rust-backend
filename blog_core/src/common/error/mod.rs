@@ -1,5 +1,7 @@
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::body::Body;
+use axum::http::{Response, StatusCode};
+use axum::response::{IntoResponse};
+use axum::Json;
 use sea_orm::DbErr;
 use serde::{Deserialize, Serialize};
 
@@ -58,6 +60,6 @@ impl IntoResponse for AppError {
             message: self.message,
         };
 
-        (StatusCode::from_u16(self.status), axum::Json(api_response)).into_response()
+        (StatusCode::from_u16(self.status).unwrap(), Json(api_response)).into_response()
     }
 }

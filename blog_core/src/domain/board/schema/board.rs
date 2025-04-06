@@ -6,7 +6,7 @@ use sea_orm::ActiveModelBehavior;
 #[sea_orm(table_name = "article_category")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = true)]
-    pub id: u64,
+    pub id: i64,
     pub name: String,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,

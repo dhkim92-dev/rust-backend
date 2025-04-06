@@ -13,7 +13,7 @@ pub struct ModifyBoardCommand {
 }
 
 pub struct BoardDto {
-    pub id: u64,
+    pub id: i64,
     pub name: String,
 }
 
@@ -27,6 +27,34 @@ impl From<BoardEntity> for BoardDto {
 }
 
 #[async_trait::async_trait]
+pub trait BoardCreateUsecase: Interface {
+    async fn create(
+        &self,
+        login_member: LoginMember,
+        command: CreateBoardCommand,
+    ) -> Result<BoardDto, AppError>;
+}
+
+#[async_trait::async_trait]
+pub trait BoardModifyUsecase: Interface {
+    async fn modify(
+        &self,
+        login_member: LoginMember,
+        id: i64,
+        command: ModifyBoardCommand,
+    ) -> Result<BoardDto, AppError>;
+}
+
+#[async_trait::async_trait]
+pub trait BoardDeleteUsecase: Interface {
+    async fn delete(
+        &self,
+        login_member: LoginMember,
+        id: i64,
+    ) -> Result<(), AppError>;
+}
+
+/* #[async_trait::async_trait]
 pub trait BoardCommandUsecase: Interface {
     async fn create(
         &self,
@@ -34,7 +62,7 @@ pub trait BoardCommandUsecase: Interface {
         command: CreateBoardCommand,
     ) -> Result<BoardDto, AppError>;
 
-    //async fn modify(&self, id: u64, command: ModifyCategoryCommand) -> Result<(), AppError>;
-
+    async fn modify(&self, id: i64, command: ModifyCategoryCommand) -> Result<BoardDto, AppError>;
+//
     //async fn delete(&self, id: u64) -> Result<(), String>;
-}
+} */
