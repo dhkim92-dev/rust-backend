@@ -54,6 +54,7 @@ pub struct AppConfig {
     // #[arg(long, default_value_t = 3153600000000)]
     #[arg(long, default_value_t = 900000)]
     pub jwt_access_token_expire: u64,
+    //#[arg(long, default_value_t = 3153600000000)]
     #[arg(long, default_value_t = 604800000)]
     pub jwt_refresh_token_expire: u64,
     #[arg(long, default_value = "https://identification.dohoon-kim.kr")]
