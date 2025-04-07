@@ -15,8 +15,8 @@ use super::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase
 pub struct BoardCreateUsecaseImpl {
     #[shaku(inject)]
     db: Arc<dyn DbConnProvider>,
-    #[shaku(inject)]
-    load_board_port: Arc<dyn LoadBoardPort>,
+    // #[shaku(inject)]
+    // load_board_port: Arc<dyn LoadBoardPort>,
     #[shaku(inject)]
     save_board_port: Arc<dyn SaveBoardPort>,
 }
@@ -68,7 +68,7 @@ impl BoardCreateUsecase for BoardCreateUsecaseImpl {
         let txn = self.db.rw_txn().await?;
         let board = BoardEntity::new(None, command.name, None, None);
         let board = self.save_board_port.save(&txn, board).await?;
-        txn.commit().await;
+        txn.commit().await?;
 
         Ok(BoardDto::from(board))
     }
@@ -102,7 +102,7 @@ impl BoardModifyUsecase for BoardModifyUsecaseImpl {
         let mut board: BoardEntity = board.expect("Board not found");
         board.change_board_name(command.name.as_str())?;
         let board = self.save_board_port.update(&txn, board).await?;
-        txn.commit().await;
+        txn.commit().await?;
 
         Ok(BoardDto::from(board))
     }
@@ -129,7 +129,7 @@ impl BoardDeleteUsecase for BoardDeleteUsecaseImpl {
 
         let board = board.unwrap();
         self.save_board_port.delete(&txn, board.get_id().unwrap()).await?;
-        txn.commit().await;
+        txn.commit().await?;
 
         Ok(())
     }
@@ -141,7 +141,7 @@ impl BoardQueryUsecase for BoardQueryUsecaseImpl {
         let txn = self.db.rw_txn().await?;
         tracing::debug!("boards query transaction start");
         let boards = self.load_board_port.find_all(&txn).await?;
-        txn.commit().await;
+        txn.commit().await?;
 
         tracing::debug!("boards query transaction complete");
         Ok(boards.into_iter()

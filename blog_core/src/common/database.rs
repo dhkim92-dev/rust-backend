@@ -10,6 +10,7 @@ pub trait DbConnProvider: Interface {
 
     async fn rw_txn(&self) -> Result<DatabaseTransaction, sea_orm::DbErr>;
 
+    #[allow(dead_code)]
     async fn txn_with_options(
         &self,
         isolation_level: Option<sea_orm::IsolationLevel>,

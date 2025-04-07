@@ -1,6 +1,5 @@
-use axum::body::Body;
-use axum::http::{Response, StatusCode};
-use axum::response::{IntoResponse};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
 use axum::Json;
 use sea_orm::DbErr;
 use serde::{Deserialize, Serialize};
@@ -20,7 +19,7 @@ pub struct AppError {
 
 impl AppError {
     pub fn with_message(code: ErrorCode, msg: &'static str) -> Self {
-        let (status, code, message) = code.cast();
+        let (status, code, _) = code.cast();
         AppError {
             status: status.as_u16(),
             code: String::from(code),

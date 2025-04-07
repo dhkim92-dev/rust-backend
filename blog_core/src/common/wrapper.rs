@@ -1,5 +1,5 @@
 use axum::http::StatusCode;
-use axum::response::{IntoResponse, IntoResponseParts, ResponseParts};
+use axum::response::IntoResponse;
 use axum::Json;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -15,9 +15,16 @@ pub struct ReturnValue<T> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CursorList<T> {
-    pub count: u16,
-    pub data: Vec<T>,
+    pub count: usize,
+    pub items: Vec<T>,
     pub next: Option<String>,
+}
+
+impl <T> CursorList<T> {
+    pub fn new(items: Vec<T>, next: Option<String>) -> Self {
+        let count = items.len();
+        CursorList { count, items, next}
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -40,6 +47,7 @@ impl<T> ReturnValue<T> {
 }
 
 impl<T: Serialize> IntoResponse for ReturnValue<T> {
+
     fn into_response(self) -> axum::response::Response {
         let status = StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
         let response = ApiResponse::from(self);
@@ -47,6 +55,7 @@ impl<T: Serialize> IntoResponse for ReturnValue<T> {
     }
 }
 
+#[allow(dead_code)]
 impl<T: Serialize> ApiResponse<T> {
     pub fn new(status: u16, message: String, data: Option<T>) -> Self {
         ApiResponse {
@@ -90,3 +99,4 @@ impl From<ErrorCode> for ApiResponse<String> {
         }
     }
 }
+

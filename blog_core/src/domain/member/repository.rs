@@ -1,8 +1,7 @@
 use sea_orm::prelude::async_trait::async_trait;
 use sea_orm::*;
-// use std::sync::Arc;
 use super::entity::MemberEntity;
-use super::mapper::MemberMapper;
+use super::mapper::member_mapper;
 use super::schema::{Column, Entity as Member}; //, Model as MemberModel};
 use shaku::{Component, Interface};
 use uuid::Uuid;
@@ -54,9 +53,9 @@ impl SaveMemberPort for MemberCommandRepository {
         txn: &DatabaseTransaction,
         member: MemberEntity,
     ) -> Result<MemberEntity, DbErr> {
-        let mut orm_entity = MemberMapper::to_orm(&member).into_active_model();
+        let orm_entity = member_mapper::to_orm(&member).into_active_model();
         let result = orm_entity.insert(txn).await?;
-        Ok(MemberMapper::to_domain(&result))
+        Ok(member_mapper::to_domain(&result))
     }
 
     async fn update(
@@ -64,7 +63,7 @@ impl SaveMemberPort for MemberCommandRepository {
         txn: &DatabaseTransaction,
         member: MemberEntity,
     ) -> Result<MemberEntity, DbErr> {
-        let mut orm_entity = MemberMapper::to_orm(&member).into_active_model();
+        let mut orm_entity = member_mapper::to_orm(&member).into_active_model();
 
         orm_entity.id = Set(member.id.unwrap());
         orm_entity.email = Set(member.email.to_owned());
@@ -76,7 +75,7 @@ impl SaveMemberPort for MemberCommandRepository {
         orm_entity.updated_at = Set(member.updated_at.to_owned());
 
         let result = orm_entity.update(txn).await?;
-        Ok(MemberMapper::to_domain(&result))
+        Ok(member_mapper::to_domain(&result))
     }
 
     async fn delete(&self, txn: &DatabaseTransaction, id: Uuid) -> Result<bool, DbErr> {
@@ -100,7 +99,7 @@ impl LoadMemberPort for MemberQueryRepository {
             return Ok(None);
         }
 
-        Ok(Some(MemberMapper::to_domain(&orm_entity.unwrap())))
+        Ok(Some(member_mapper::to_domain(&orm_entity.unwrap())))
     }
 
     async fn find_by_email(
@@ -117,6 +116,6 @@ impl LoadMemberPort for MemberQueryRepository {
             return Ok(None);
         }
 
-        Ok(Some(MemberMapper::to_domain(&orm_entity.unwrap())))
+        Ok(Some(member_mapper::to_domain(&orm_entity.unwrap())))
     }
 }

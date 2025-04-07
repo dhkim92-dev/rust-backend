@@ -1,8 +1,9 @@
-use crate::application::board::{BoardCreateUsecaseImpl, BoardDeleteUsecaseImpl, BoardModifyUsecaseImpl, BoardQueryUsecaseImpl};
+use crate::application::board::{BoardCreateUsecaseImpl, BoardDeleteUsecaseImpl, BoardModifyUsecaseImpl, BoardQueryUsecaseImpl, PostCreateUsecaseImpl, PostDeleteUsecaseImpl, PostModifyUsecaseImpl, PostQueryUsecaseImpl};
 use crate::application::member::adapter::{
     MemberCreateUseCaseImpl, MemberDeleteUseCaseImpl, MemberUpdateUseCaseImpl,
 };
 use crate::common::CookieBuilderImpl;
+use crate::domain::board::repository::{SeaOrmLoadPostAdapter, SeaOrmSavePostAdapter};
 use shaku::module;
 
 use super::application::auth::*;
@@ -36,6 +37,14 @@ module! {
             BoardQueryUsecaseImpl,
             SeaOrmLoadBoardAdapter,
             SeaOrmSaveBoardAdapter,
+
+            // Post
+            PostCreateUsecaseImpl,
+            PostModifyUsecaseImpl,
+            PostDeleteUsecaseImpl,
+            PostQueryUsecaseImpl,
+            SeaOrmSavePostAdapter,
+            SeaOrmLoadPostAdapter,
 
             /* Member Service Related */
             MemberCreateUseCaseImpl,

@@ -11,7 +11,7 @@ pub enum ErrorCode {
     Forbidden,
     Conflict,
     DbError,
-
+    NotImplemented,
     // 검증 에러
     ValidationError,
 
@@ -33,34 +33,46 @@ impl ErrorCode {
         match self {
             // 일반 에러
             Self::BadRequest => (StatusCode::BAD_REQUEST, "GE-001", "잘못된 요청입니다."),
+
             Self::Unauthorized => (
                 StatusCode::UNAUTHORIZED,
                 "GE-002",
                 "인증되지 않은 사용자입니다.",
             ),
+
             Self::Forbidden => (
                 StatusCode::FORBIDDEN,
                 "GE-003",
                 "접근이 금지된 리소스입니다.",
             ),
+
             Self::NotFound => (
                 StatusCode::NOT_FOUND,
                 "GE-004",
                 "요청한 리소스를 찾을 수 없습니다.",
             ),
+            
             Self::Conflict => (
                 StatusCode::CONFLICT,
                 "GE-005",
                 "이미 존재하는 리소스입니다.",
             ),
+
             Self::InternalServerError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "GE-006",
                 "서버 내부 오류입니다.",
             ),
+
+            Self::NotImplemented => (
+                StatusCode::NOT_IMPLEMENTED,
+                "GE-007",
+                "구현되지 않은 기능입니다.",
+            ),
+
             Self::DbError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "GE-007",
+                "GE-008",
                 "DB 오류입니다.",
             ),
 
@@ -102,16 +114,14 @@ impl ErrorCode {
     }
 
     pub fn with_message(code: ErrorCode, message: &'static str) -> ApiResponse<String> {
-        let (status, code, message) = code.cast();
-        let response = ApiResponse {
+        let (status, code, _message) = code.cast();
+        ApiResponse {
             timestamp: chrono::Utc::now().naive_utc(),
             status: status.as_u16(),
             data: None as Option<String>,
             code: Some(code.to_owned()),
             message: message.to_owned(),
-        };
-
-        return response;
+        }
     }
 }
 
@@ -131,6 +141,7 @@ impl IntoResponse for ErrorCode {
 
 impl From<sea_orm::error::DbErr> for ErrorCode {
     fn from(err: sea_orm::error::DbErr) -> Self {
+        tracing::error!("DB Error: {}", err);
         ErrorCode::DbError
     }
 }

@@ -1,13 +1,14 @@
 use std::sync::Arc;
 
-// use crate::interfaces;
-// use axum::{Extension, Router};
 use clap::Parser;
-// use dotenvy::dotenv;
 use shaku::{Component, Interface};
 
 pub trait ConfigProvider: Interface {
     fn get(&self) -> Arc<AppConfig>;
+
+    fn get_origin(&self) -> String;
+
+    fn get_uri(&self, endpoint: &str) -> String;
 }
 
 #[derive(Component)]
@@ -20,6 +21,27 @@ impl ConfigProvider for ConfigProviderImpl {
     fn get(&self) -> Arc<AppConfig> {
         self.config.clone()
     }
+
+    fn get_origin(&self) -> String {
+
+        let protocol = if self.config.protocol == "https" {
+            "https://"
+        } else {
+            "http://"
+        };
+
+        format!("{}{}", protocol, self.config.server_host)
+    }
+
+    fn get_uri(&self, endpoint: &str) -> String {
+        let protocol = if self.config.protocol == "https" {
+            "https://"
+        } else {
+            "http://"
+        };
+
+        format!("{}{}{}", protocol, self.config.server_host, endpoint)
+    }
 }
 
 #[derive(Parser, Debug, Clone)]
@@ -29,7 +51,7 @@ pub struct AppConfig {
     // Server
     #[arg(long, default_value = "localhost:8080")]
     pub server_host: String,
-    #[arg(long, default_value = "HTTP")]
+    #[arg(long, default_value = "http")]
     protocol: String,
 
     // Datasource
@@ -53,8 +75,11 @@ pub struct AppConfig {
     pub jwt_access_token_secret: String,
     #[arg(long, default_value = "test-refresh-token-secret")]
     pub jwt_refresh_token_secret: String,
+    // 100년
+    // #[arg(long, default_value_t = 3153600000000)]
     #[arg(long, default_value_t = 900000)]
     pub jwt_access_token_expire: u64,
+    //#[arg(long, default_value_t = 3153600000000)]
     #[arg(long, default_value_t = 604800000)]
     pub jwt_refresh_token_expire: u64,
     #[arg(long, default_value = "https://identification.dohoon-kim.kr")]

@@ -16,6 +16,7 @@ use std::sync::Arc;
 use tracing::info;
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct LoginMember {
     pub id: uuid::Uuid,
     pub nickname: String,
@@ -24,7 +25,21 @@ pub struct LoginMember {
     pub is_activated: bool,
 }
 
+#[allow(dead_code)]
 impl LoginMember {
+
+    pub fn is_admin(&self) -> bool {
+        self.role == "ROLE_ADMIN"
+    }
+
+    pub fn is_member(&self) -> bool {
+        self.role == "ROLE_MEMBER"
+    }
+
+    pub fn is_anonymous(&self) -> bool {
+        self.role == "ROLE_ANONYMOUS"
+    }
+
     pub fn from_claims(claims: AccessTokenClaims) -> Self {
         Self {
             id: uuid::Uuid::parse_str(&claims.sub).unwrap(),

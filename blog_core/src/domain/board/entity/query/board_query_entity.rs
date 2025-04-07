@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use sea_orm::FromQueryResult;
 
 #[derive(Debug, Clone, PartialEq, Eq, FromQueryResult)]
