@@ -7,6 +7,8 @@ pub trait ConfigProvider: Interface {
     fn get(&self) -> Arc<AppConfig>;
 
     fn get_origin(&self) -> String;
+
+    fn get_uri(&self, endpoint: &str) -> String;
 }
 
 #[derive(Component)]
@@ -29,6 +31,16 @@ impl ConfigProvider for ConfigProviderImpl {
         };
 
         format!("{}{}", protocol, self.config.server_host)
+    }
+
+    fn get_uri(&self, endpoint: &str) -> String {
+        let protocol = if self.config.protocol == "https" {
+            "https://"
+        } else {
+            "http://"
+        };
+
+        format!("{}{}{}", protocol, self.config.server_host, endpoint)
     }
 }
 

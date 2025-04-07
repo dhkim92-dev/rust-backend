@@ -36,12 +36,11 @@ impl<T: Serialize + Clone> CursorListBuilder<T> {
         self
     }
 
-    pub fn build(self) -> CursorList<T> {
+    pub fn build(self, uri: String) -> CursorList<T> {
         if self.target.is_none() {
             panic!("Target not set");
         }
-        let target = self.target.clone().unwrap();
-        let query = self.query.clone();
+
         let size = self.size;
 
         if size >= self.data.len() {
@@ -60,7 +59,7 @@ impl<T: Serialize + Clone> CursorListBuilder<T> {
 
         CursorList::new(
             self.data[0..size].to_vec(),
-            Some(queries),
+            Some(format!("{}?{}", uri, queries)),
         )
     }
 

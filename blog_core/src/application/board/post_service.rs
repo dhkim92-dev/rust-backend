@@ -181,7 +181,7 @@ impl PostQueryUsecase for PostQueryUsecaseImpl {
         cursor: Option<chrono::NaiveDateTime>,
         size: u64,
     ) -> Result<Vec<QPostDto>, AppError> {
-        let txn = self.db.rw_txn().await?;
+        let txn = self.db.ro_txn().await?;
         let posts = self.load_post_port.find_posts(&txn, category_id, cursor, size+1)
             .await
             .unwrap_or(Vec::new());
@@ -195,4 +195,20 @@ impl PostQueryUsecase for PostQueryUsecaseImpl {
 
         Ok(posts)
     }
+
+    async fn get_post(&self, id: Uuid) -> Result<QPostDto, AppError> {
+        let txn = self.db.ro_txn().await?;
+        let post = self.load_post_port.find_by_id(&txn, id)
+            .await;
+        txn.commit().await?;
+
+        if post.is_none() {
+            return Err(AppError::with_message(
+                ErrorCode::NotFound,
+                "게시글을 찾을 수 없습니다.",
+            ));
+        }
+        Ok(QPostDto::from(post.unwrap()))
+    }
 }
+

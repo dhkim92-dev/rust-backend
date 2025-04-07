@@ -6,6 +6,7 @@ use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use chrono::NaiveDateTime;
 use uuid::Uuid;
+use crate::common::error_code::ErrorCode;
 use crate::application::board::{CategoryVo, CreatePostCommand, ModifyPostCommand, PostCreateUsecase, PostDeleteUsecase, PostDto, PostModifyUsecase, PostQueryUsecase, QPostDto, WriterVo};
 use crate::common::{AppError, CursorList, CursorListBuilder, LoginMember, ReturnValue};
 use crate::config::ConfigProvider;
@@ -79,20 +80,27 @@ pub async fn get_posts(
         cursor_list_builder = cursor_list_builder.register_query("category_id".to_owned(), category_id.to_string());
     }
 
-    let endpoint = format!("{}{}", config_provider.get_origin(), "/api/v1/posts");
-
     Ok(ReturnValue {
         status: 200,
-        data: cursor_list_builder.build(endpoint),
+        data: cursor_list_builder.build(config_provider.get_uri("/api/v1/posts")),
         message: "게시글 목록을 가져왔습니다.".to_owned()
     })
 }
-/* 
+
 pub async fn get_post(
+    State(ctx): State<Arc<AppContext>>,
+    Path(id): Path<Uuid>,
+) -> Result<ReturnValue<PostQueryResponse>, AppError> {
+    let query_usecase: &dyn PostQueryUsecase = ctx.resolve_ref();
 
-) -> Result<ReturnValue<Vec<PostQueryResponse>, AppError> {
+    let post = query_usecase.get_post(id).await?;
 
-} */
+    Ok(ReturnValue {
+        status: 200,
+        data: PostQueryResponse::from(post),
+        message: "게시글을 가져왔습니다.".to_owned()
+    })
+}
 
 #[derive(serde::Deserialize)]
 pub struct CreatePostRequest {

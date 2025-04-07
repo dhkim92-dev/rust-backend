@@ -8,7 +8,6 @@ use sea_orm::entity::*;
 use sea_orm::prelude::*;
 use sea_orm::*;
 use chrono::NaiveDateTime;
-use crate::domain::board;
 use crate::domain::board::entity::command::post_entity::PostEntity;
 use crate::domain::board::entity::mapper::post_mapper;
 use crate::domain::board::entity::query::QPostEntity;
@@ -22,6 +21,8 @@ pub trait LoadPostPort: Interface {
     async fn load_by_id(&self, txn: &DatabaseTransaction, id: Uuid) -> Option<PostEntity>;
 
     async fn find_posts(&self, txn: &DatabaseTransaction, category_id: Option<i64>, cursor: Option<NaiveDateTime>, size: u64) -> Option<Vec<QPostEntity>>;
+
+    async fn find_by_id(&self, txn: &DatabaseTransaction, id: Uuid) -> Option<QPostEntity>;
 }
 
 #[async_trait::async_trait]
@@ -103,6 +104,43 @@ impl LoadPostPort for SeaOrmLoadPostAdapter {
             }
             Err(e) => {
                 tracing::error!("Error finding posts: {:?}", e);
+                None
+            }
+        }
+    }
+
+    async fn find_by_id(&self, txn: &DatabaseTransaction, id: Uuid) -> Option<QPostEntity> {
+        let result = post::Entity::find()
+            .select_only()
+            .column(post::Column::Id)
+            .column_as(post::Column::MemberId, "writer_id")
+            .column_as(domain::member::schema::Column::Nickname, "writer_name")
+            .column_as(post::Column::CategoryId, "category_id")
+            .column_as(domain::board::schema::board::Column::Name, "category_name")
+            .column(post::Column::Title)
+            .column(post::Column::Contents)
+            .column(post::Column::CreatedAt)
+            .column(post::Column::UpdatedAt)
+            .join(
+                JoinType::LeftJoin, 
+                post::Relation::Member.def()
+            )
+            .join(
+                JoinType::LeftJoin, 
+                post::Relation::Board.def()
+            )
+            .filter(post::Column::Id.eq(id))
+            .into_model::<QPostEntity>()
+            .one(txn)
+            .await;
+
+        tracing::debug!("find_by_id result: {:?}", result);
+
+        match result {
+            Ok(Some(post)) => Some(post),
+            Ok(None) => None,
+            Err(e) => {
+                tracing::error!("Error finding post by id: {:?}", e);
                 None
             }
         }

@@ -200,4 +200,6 @@ pub trait PostQueryUsecase: Interface {
         cursor: Option<NaiveDateTime>,
         size: u64,
     ) -> Result<Vec<QPostDto>, AppError>;
+
+    async fn get_post(&self, id: Uuid) -> Result<QPostDto, AppError>;
 }

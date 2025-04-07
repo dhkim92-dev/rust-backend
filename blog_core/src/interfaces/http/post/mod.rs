@@ -19,6 +19,7 @@ pub fn router(ctx: Arc<AppContext>) -> axum::Router {
 
     let post_query_router = axum::Router::new()
         .route("/", get(get_posts))
+        .route("/{id}", get(get_post))
         .with_state(ctx.clone());
 
     Router::new()
