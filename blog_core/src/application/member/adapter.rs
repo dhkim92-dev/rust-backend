@@ -8,6 +8,7 @@ use crate::common::middleware::security::LoginMember;
 use crate::domain::member::entity::MemberEntity;
 use crate::domain::member::repository::{LoadMemberPort, SaveMemberPort};
 use shaku::Component;
+use uuid::Uuid;
 use std::sync::Arc;
 
 #[derive(Component)]
@@ -80,9 +81,14 @@ impl MemberUpdateUseCase for MemberUpdateUseCaseImpl {
     async fn update(
         &self,
         login_member: LoginMember,
+        resource_id: Uuid,
         command: MemberUpdateCommand,
     ) -> Result<MemberDto, ErrorCode> {
         let txn = self.db.rw_txn().await?;
+
+        if resource_id != login_member.id {
+            return Err(ErrorCode::Forbidden);
+        }
 
         let member = self
             .load_member_port

@@ -40,6 +40,13 @@ impl PostEntity {
         }
     }
 
+    pub fn check_ownership(&self, member_id: Uuid) -> Result<(), AppError> {
+        if self.member_id != member_id {
+            return Err(AppError::with_message(ErrorCode::Forbidden, "게시글 소유자가 아닙니다."));
+        }
+        Ok(())
+    }
+
     pub fn validate(&self) -> Result<bool, AppError> {
         if !Self::validate_title(&self.title) {
             return Err(AppError::with_message(ErrorCode::BadRequest, "게시글 제목은 5자 이상 255자 이하로 작성해야 합니다."));
@@ -52,12 +59,12 @@ impl PostEntity {
         return Ok(true)
     }
 
-    fn validate_title(value: &String) -> bool {
+    pub fn validate_title(value: &String) -> bool {
         let sz_chrs = value.chars().count();
          !(value.is_empty () || sz_chrs <= 4 || sz_chrs > 255)
     }
 
-    fn validate_contents(value: &String) -> bool {
+    pub fn validate_contents(value: &String) -> bool {
         let sz_chrs = value.chars().count();
 
         !(value.is_empty () || sz_chrs <= 4 || sz_chrs > 65535)

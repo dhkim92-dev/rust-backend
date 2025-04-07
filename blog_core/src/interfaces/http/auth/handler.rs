@@ -11,7 +11,6 @@ use crate::application::auth::usecases::LoginUseCase;
 use crate::application::auth::JwtUseCase;
 use crate::common::error::error_code::ErrorCode;
 use crate::common::wrapper::ReturnValue;
-use crate::common::CookieBuilder;
 use crate::config::ConfigProvider;
 use crate::di::AppContext;
 
@@ -20,7 +19,6 @@ pub async fn reissue_jwt(
     State(ctx): State<Arc<AppContext>>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
     let jwt_usecase: &dyn JwtUseCase = ctx.resolve_ref();
-    // let cookie_builder: &dyn CookieBuilder = ctx.resolve_ref();
 
     let rt_cookie = match jar.get("refresh-token") {
         Some(cookie) => cookie,
@@ -48,7 +46,7 @@ pub async fn reissue_jwt(
                 ),
             ))
         }
-        Err(err) => {
+        Err(_) => {
             tracing::error!("access token 재발급에 실패하였습니다. refresh token이 만료되었거나 변조되었습습니다.");
             let jar = jar.remove(remove_cookie);
             Err((jar, ErrorCode::InvalidJwtToken))
@@ -63,7 +61,7 @@ pub async fn login(
 ) -> Result<impl axum::response::IntoResponse, ErrorCode> {
     info!("login request from {:?}", req.email);
     let login_usecase: &dyn LoginUseCase = ctx.resolve_ref();
-    let cookie_builder: &dyn CookieBuilder = ctx.resolve_ref();
+    // let cookie_builder: &dyn CookieBuilder = ctx.resolve_ref();
     let config_provider: &dyn ConfigProvider = ctx.resolve_ref();
     let cfg = config_provider.get();
 

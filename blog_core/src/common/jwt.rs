@@ -150,7 +150,7 @@ impl JwtService for JwtServiceImpl {
                 tracing::info!("token_data: {:?}", data);
                 Ok(data.claims)
             }
-            Err(err) => {
+            Err(_) => {
                 error!("Failed to decode access token");
                 Err(ErrorCode::InvalidJwtToken)
             }

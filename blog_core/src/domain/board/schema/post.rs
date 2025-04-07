@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveModelBehavior;
-use crate::domain::{board, member};
+use crate::domain::board;
 
 #[derive(Debug, Clone, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "article")]
@@ -26,12 +26,24 @@ pub enum Relation {
         from = "Column::CategoryId",
         to = "super::board::Column::Id"
     )]
-    Board
+    Board,
+    #[sea_orm(
+        belongs_to = "crate::domain::member::schema::Entity",
+        from = "Column::MemberId",
+        to = "crate::domain::member::schema::Column::Id"
+    )]
+    Member
 }
 
 impl Related<board::schema::board::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Board.def()
+    }
+}
+
+impl Related<crate::domain::member::schema::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Member.def()
     }
 }
 

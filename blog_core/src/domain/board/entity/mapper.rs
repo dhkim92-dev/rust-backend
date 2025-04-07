@@ -1,6 +1,5 @@
 pub mod board_mapper {
     use sea_orm::ActiveValue::{NotSet, Set};
-
     use crate::domain::board::entity::command::board_entity::BoardEntity;
     use crate::domain::board::schema::board::{
         ActiveModel as ActiveBoardModel, Model as BoardModel,
@@ -31,7 +30,7 @@ pub mod board_mapper {
 
 pub mod post_mapper {
 
-    use sea_orm::ActiveValue::{NotSet, Set};
+    use sea_orm::ActiveValue::Set;
     use uuid::Uuid;
 
     use crate::domain::board::entity::command::post_entity::{PostEntity, PostEntityBuilder};

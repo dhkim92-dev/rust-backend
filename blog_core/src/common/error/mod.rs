@@ -19,7 +19,7 @@ pub struct AppError {
 
 impl AppError {
     pub fn with_message(code: ErrorCode, msg: &'static str) -> Self {
-        let (status, code, message) = code.cast();
+        let (status, code, _) = code.cast();
         AppError {
             status: status.as_u16(),
             code: String::from(code),

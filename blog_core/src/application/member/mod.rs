@@ -6,6 +6,7 @@ use crate::domain::member::entity::MemberEntity;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use shaku::Interface;
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MemberCreateCommand {
@@ -56,6 +57,7 @@ pub trait MemberUpdateUseCase: Interface {
     async fn update(
         &self,
         login_member: LoginMember,
+        resource_id: Uuid,
         command: MemberUpdateCommand,
     ) -> Result<MemberDto, ErrorCode>;
 }

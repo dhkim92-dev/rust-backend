@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    application::board::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, BoardQueryUsecase, CreateBoardCommand, CreatePostCommand, ModifyBoardCommand, QBoardDto},
+    application::board::{BoardCreateUsecase, BoardDeleteUsecase, BoardDto, BoardModifyUsecase, BoardQueryUsecase, CreateBoardCommand, ModifyBoardCommand, QBoardDto},
     common::{AppError, LoginMember, ReturnValue},
     di::AppContext,
 };
@@ -12,7 +12,6 @@ pub async fn create_board(
     State(ctx): State<Arc<AppContext>>,
     Extension(login_member): Extension<LoginMember>,
     Json(request): Json<CreateBoardRequest>,
-    // ) -> Result<ReturnValue<BoardCommandResponse>, AppError> {
 ) -> Result<impl IntoResponse, AppError> {
     let command = request.into();
     let board_service: &dyn BoardCreateUsecase = ctx.resolve_ref();

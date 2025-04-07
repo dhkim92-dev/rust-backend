@@ -1,4 +1,4 @@
-pub mod MemberMapper {
+pub mod member_mapper {
     use crate::domain::{member::entity::MemberEntity, member::schema::Model as MemberModel};
 
     pub fn to_domain(orm_entity: &MemberModel) -> MemberEntity {
@@ -14,16 +14,16 @@ pub mod MemberMapper {
         }
     }
 
-    pub fn to_orm(domainEntity: &MemberEntity) -> MemberModel {
+    pub fn to_orm(domain_entity: &MemberEntity) -> MemberModel {
         MemberModel {
-            id: domainEntity.id.unwrap(),
-            nickname: domainEntity.nickname.clone(),
-            email: domainEntity.email.clone(),
-            password: domainEntity.password.clone(),
-            role: domainEntity.role.clone(),
-            created_at: domainEntity.created_at.clone(),
-            updated_at: domainEntity.updated_at.clone(),
-            is_activated: domainEntity.is_activated,
+            id: domain_entity.id.unwrap(),
+            nickname: domain_entity.nickname.clone(),
+            email: domain_entity.email.clone(),
+            password: domain_entity.password.clone(),
+            role: domain_entity.role.clone(),
+            created_at: domain_entity.created_at.clone(),
+            updated_at: domain_entity.updated_at.clone(),
+            is_activated: domain_entity.is_activated,
         }
     }
 }

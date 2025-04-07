@@ -114,16 +114,14 @@ impl ErrorCode {
     }
 
     pub fn with_message(code: ErrorCode, message: &'static str) -> ApiResponse<String> {
-        let (status, code, message) = code.cast();
-        let response = ApiResponse {
+        let (status, code, _message) = code.cast();
+        ApiResponse {
             timestamp: chrono::Utc::now().naive_utc(),
             status: status.as_u16(),
             data: None as Option<String>,
             code: Some(code.to_owned()),
             message: message.to_owned(),
-        };
-
-        return response;
+        }
     }
 }
 
@@ -143,6 +141,7 @@ impl IntoResponse for ErrorCode {
 
 impl From<sea_orm::error::DbErr> for ErrorCode {
     fn from(err: sea_orm::error::DbErr) -> Self {
+        tracing::error!("DB Error: {}", err);
         ErrorCode::DbError
     }
 }

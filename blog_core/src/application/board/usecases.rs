@@ -1,19 +1,24 @@
 use crate::{
     common::{AppError, LoginMember},
-    domain::board::entity::{command::{board_entity::BoardEntity, post_entity::PostEntity}, query::QBoardEntity},
+    domain::board::entity::{command::{board_entity::BoardEntity, post_entity::PostEntity}, query::{QBoardEntity, QPostEntity}},
 };
 use chrono::NaiveDateTime;
+use sea_orm::FromQueryResult;
+use serde::{Deserialize, Serialize};
 use shaku::Interface;
 use uuid::Uuid;
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CreateBoardCommand {
     pub name: String,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ModifyBoardCommand {
     pub name: String,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BoardDto {
     pub id: i64,
     pub name: String,
@@ -51,57 +56,46 @@ pub struct PostDto {
     pub updated_at: Option<NaiveDateTime>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, FromQueryResult)]
 pub struct WriterVo {
+    #[sea_orm(from_alias = "writer_id")]
     pub id: uuid::Uuid,
+    #[sea_orm(from_alias = "writer_name")]
     pub name: String,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, FromQueryResult)]
 pub struct CategoryVo {
+    #[sea_orm(from_alias = "category_id")]
     pub id: i64,
+    #[sea_orm(from_alias = "category_name")]
     pub name: String
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct QPostDto {
     pub id: uuid::Uuid,
     pub writer: WriterVo,
     pub category: CategoryVo,
     pub title: String,
-    pub contents: String,
-    pub created_at: Uuid,
-    pub updated_at: Option<Uuid>,
-}
-
-/* impl From<PostEntity) for PostDto {
-    fn from(entity: PostEntity) -> Self {
-        PostDto {
-            id: entity.id,
-            writer_id: entity.member_id,
-            title: entity.title,
-            contents: entity.content,
-            category_id: entity.category_id,
-            updated_at: entity.updated_at.to_string(),
-        }
-    }
+    pub contents: Option<String>,
+    pub created_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
 }
 
 impl From<QPostEntity> for QPostDto {
-    QPostDto {
-        id: entity.id,
-        writer: WriterVo {
-            id: entity.writer.id,
-            name: entity.writer.name,
-        },
-        category: CategoryVo {
-            id: entity.category.id,
-            name: entity.category.name,
-        },
-        title: entity.title,
-        contents: entity.content,
-        created_at: entity.created_at.to_string(),
-        updated_at: entity.updated_at.to_string(),
+    fn from(entity: QPostEntity) -> Self {
+        QPostDto {
+            id: entity.id,
+            writer:  entity.writer,
+            category: entity.category,
+            title: entity.title,
+            contents: entity.contents,
+            created_at: entity.created_at,
+            updated_at: entity.updated_at
+        }
     }
 }
- */
 
 impl From<PostEntity> for PostDto {
     fn from(entity: PostEntity) -> Self {
@@ -180,7 +174,7 @@ pub trait PostCreateUsecase: Interface {
 
 #[async_trait::async_trait]
 pub trait PostModifyUsecase: Interface {
-    async fn modify(
+    async fn update(
         &self,
         login_member: LoginMember,
         id: Uuid,
@@ -197,8 +191,13 @@ pub trait PostDeleteUsecase: Interface {
     ) -> Result<(), AppError>;
 }
 
-/* 
 #[async_trait::async_trait]
 pub trait PostQueryUsecase: Interface {
+
+    async fn get_posts(
+        &self,
+        category_id: Option<i64>,
+        cursor: Option<NaiveDateTime>,
+        size: u64,
+    ) -> Result<Vec<QPostDto>, AppError>;
 }
-*/

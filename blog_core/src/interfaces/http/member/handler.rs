@@ -90,7 +90,7 @@ pub async fn update_member_info(
 ) -> Result<ReturnValue<MemberResponse>, ErrorCode> {
     let member_update_usecase: &dyn MemberUpdateUseCase = ctx.resolve_ref();
     let member_dto = member_update_usecase
-        .update(login_member, payload.into())
+        .update(login_member, id, payload.into())
         .await?;
 
     Ok(ReturnValue {

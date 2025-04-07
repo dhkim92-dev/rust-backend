@@ -40,7 +40,7 @@ impl LoginUseCase for AuthService {
             .find_by_email(&txn, &command.principal)
             .await;
 
-        txn.commit().await;
+        txn.commit().await?;
 
         let member = match member {
             Ok(Some(member)) => member,
@@ -84,7 +84,7 @@ impl JwtUseCase for JwtUseCaseImpl {
             None => return Err(E::NotFound),
         };
 
-        txn.commit().await;
+        txn.commit().await?;
 
         Ok(JwtReissueResult {
             access_token: self

@@ -5,6 +5,8 @@ use shaku::{Component, Interface};
 
 pub trait ConfigProvider: Interface {
     fn get(&self) -> Arc<AppConfig>;
+
+    fn get_origin(&self) -> String;
 }
 
 #[derive(Component)]
@@ -17,6 +19,17 @@ impl ConfigProvider for ConfigProviderImpl {
     fn get(&self) -> Arc<AppConfig> {
         self.config.clone()
     }
+
+    fn get_origin(&self) -> String {
+
+        let protocol = if self.config.protocol == "https" {
+            "https://"
+        } else {
+            "http://"
+        };
+
+        format!("{}{}", protocol, self.config.server_host)
+    }
 }
 
 #[derive(Parser, Debug, Clone)]
@@ -26,7 +39,7 @@ pub struct AppConfig {
     // Server
     #[arg(long, default_value = "localhost:8080")]
     pub server_host: String,
-    #[arg(long, default_value = "HTTP")]
+    #[arg(long, default_value = "http")]
     protocol: String,
 
     // Datasource
