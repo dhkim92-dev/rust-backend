@@ -87,6 +87,12 @@ pub struct AppConfig {
     #[arg(long, default_value = "https://www.dohoon-kim.kr")]
     pub jwt_audience: String,
     // OAuth
+    
+    // FileIO
+    #[arg(long, default_value = "/Users/terrapin/.volumes/media")]
+    pub storage_path: String,
+    #[arg(long, default_value = "http://localhost/media")]
+    pub media_url: String,
 }
 
 impl AppConfig {
