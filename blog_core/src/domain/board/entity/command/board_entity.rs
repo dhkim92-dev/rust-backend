@@ -67,9 +67,6 @@ impl BoardEntity {
 
     pub fn change_board_name(&mut self, name: &str) -> Result<(), AppError> {
         let _ =  self.validate_name(name)?;
-
-        
-
         self.name = name.to_owned();
         Ok(())
     }
@@ -97,7 +94,7 @@ mod test {
         let mut board = BoardEntity::new(None, "test".to_string(), None, None);
         assert_eq!(board.validate().is_ok(), true);
         let err = board.change_board_name("").err().unwrap();
-        assert_eq!(err.message, "이름은 2자 이상 14자 이하여야합니다.");
+        assert_eq!(err.message, "이름은 필수입니다.");
     }
 
     #[test]

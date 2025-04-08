@@ -7,6 +7,7 @@ edition = "2021"
 sea-orm = { version = "1.1.8", features = ["sqlx-postgres", "runtime-tokio-rustls", "mock", "debug-print"] }
 
 [dependencies]
+random-string="1.0"
 derive_builder = "0.20.2"
 axum = {version = "0.8.1", features = ["multipart"]}
 axum-extra = { version = "0.10.1", features = ["cookie"] }

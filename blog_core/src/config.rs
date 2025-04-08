@@ -3,6 +3,34 @@ use std::sync::Arc;
 use clap::Parser;
 use shaku::{Component, Interface};
 
+pub trait OAuth2ConfigProvider: Interface {
+    
+    fn get_github_client_id(&self) -> String;
+
+    fn get_github_client_secret(&self) -> String;
+
+    fn get_github_redirect_uri(&self) -> String;
+}
+
+#[derive(Component)]
+#[shaku(interface = OAuth2ConfigProvider)]
+pub struct OAuth2ConfigProviderImpl {
+}
+
+impl OAuth2ConfigProvider for OAuth2ConfigProviderImpl {
+    fn get_github_client_id(&self) -> String {
+        std::env::var("GITHUB_CLIENT_ID").expect("GITHUB_CLIENT_ID not set")
+    }
+
+    fn get_github_client_secret(&self) -> String {
+        std::env::var("GITHUB_CLIENT_SECRET").expect("GITHUB_CLIENT_SECRET not set")
+    }
+
+    fn get_github_redirect_uri(&self) -> String {
+        std::env::var("GITHUB_REDIRECT_URI").expect("GITHUB_REDIRECT_URI not set")
+    }
+}
+
 pub trait ConfigProvider: Interface {
     fn get(&self) -> Arc<AppConfig>;
 

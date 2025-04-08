@@ -4,6 +4,7 @@ use crate::application::member::adapter::{
 };
 use crate::common::file_writer::FileWriterImpl;
 use crate::common::CookieBuilderImpl;
+use crate::config::OAuth2ConfigProviderImpl;
 use crate::domain::board::repository::{SeaOrmLoadPostAdapter, SeaOrmSavePostAdapter};
 use shaku::module;
 
@@ -22,6 +23,9 @@ module! {
             ConfigProviderImpl,
             CookieBuilderImpl,
             FileWriterImpl,
+
+            // OAuth2
+            OAuth2ConfigProviderImpl,
 
             // Auth
             AuthService,
