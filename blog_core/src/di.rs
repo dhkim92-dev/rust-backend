@@ -2,6 +2,7 @@ use crate::application::board::{BoardCreateUsecaseImpl, BoardDeleteUsecaseImpl, 
 use crate::application::member::adapter::{
     MemberCreateUseCaseImpl, MemberDeleteUseCaseImpl, MemberUpdateUseCaseImpl,
 };
+use crate::common::file_writer::FileWriterImpl;
 use crate::common::CookieBuilderImpl;
 use crate::domain::board::repository::{SeaOrmLoadPostAdapter, SeaOrmSavePostAdapter};
 use shaku::module;
@@ -20,6 +21,7 @@ module! {
             DbConnProviderImpl,
             ConfigProviderImpl,
             CookieBuilderImpl,
+            FileWriterImpl,
 
             // Auth
             AuthService,
