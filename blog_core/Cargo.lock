@@ -433,6 +433,7 @@ dependencies = [
  "dotenvy",
  "image",
  "jsonwebtoken",
+ "rand",
  "random-string",
  "sea-orm",
  "serde",

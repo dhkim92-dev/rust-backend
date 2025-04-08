@@ -4,12 +4,18 @@ use clap::Parser;
 use shaku::{Component, Interface};
 
 pub trait OAuth2ConfigProvider: Interface {
-    
-    fn get_github_client_id(&self) -> String;
 
-    fn get_github_client_secret(&self) -> String;
+    fn github_login_url(&self) -> String;
 
-    fn get_github_redirect_uri(&self) -> String;
+    fn github_client_id(&self) -> String;
+
+    fn github_client_secret(&self) -> String;
+
+    fn github_code_redirect_uri(&self) -> String;
+
+    fn github_token_redirect_uri(&self) -> String;
+
+    fn github_scopes(&self) -> String;
 }
 
 #[derive(Component)]
@@ -18,16 +24,29 @@ pub struct OAuth2ConfigProviderImpl {
 }
 
 impl OAuth2ConfigProvider for OAuth2ConfigProviderImpl {
-    fn get_github_client_id(&self) -> String {
+
+    fn github_login_url(&self) -> String {
+        std::env::var("GITHUB_LOGIN_URL").unwrap_or("https://github.com/login/oauth/authorize".to_string())
+    }
+
+    fn github_client_id(&self) -> String {
         std::env::var("GITHUB_CLIENT_ID").expect("GITHUB_CLIENT_ID not set")
     }
 
-    fn get_github_client_secret(&self) -> String {
+    fn github_client_secret(&self) -> String {
         std::env::var("GITHUB_CLIENT_SECRET").expect("GITHUB_CLIENT_SECRET not set")
     }
 
-    fn get_github_redirect_uri(&self) -> String {
-        std::env::var("GITHUB_REDIRECT_URI").expect("GITHUB_REDIRECT_URI not set")
+    fn github_code_redirect_uri(&self) -> String {
+        std::env::var("GITHUB_CODE_REDIRECT_URI").expect("GITHUB_CODE_REDIRECT_URI not set")
+    }
+
+    fn github_token_redirect_uri(&self) -> String {
+        std::env::var("GITHUB_TOKEN_REDIRECT_URI").expect("GITHUB_TOKEN_REDIRECT_URI not set")
+    }
+
+    fn github_scopes(&self) -> String {
+        std::env::var("GITHUB_SCOPES").unwrap_or("profiles".to_string())
     }
 }
 
@@ -74,6 +93,7 @@ impl ConfigProvider for ConfigProviderImpl {
 
 #[derive(Parser, Debug, Clone)]
 pub struct AppConfig {
+
     #[arg(long, default_value = "dev")]
     pub app_env: String,
     // Server
