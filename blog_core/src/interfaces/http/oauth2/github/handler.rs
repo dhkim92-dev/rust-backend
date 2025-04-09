@@ -1,85 +1,85 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use axum::extract::{Query, State};
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect, Response};
-use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
 use shaku::HasComponent;
 
-// use crate::common::error::error_code::ErrorCode;
-use crate::common::redirect_uri_builder::OAuth2RedirectURI;
-use crate::common::{AppError, ReturnValue};
+use crate::application::auth::usecases::{LoginUseCase, OAuth2LoginCommand};
+use crate::application::oauth2::github::GithubOAuth2UsecaseImpl;
+use crate::application::oauth2::OAuth2Usecase;
+use crate::common::error::error_code::ErrorCode;
+use crate::common::{AppError, CookieMaker, ReturnValue};
 use crate::config::{ConfigProvider, OAuth2ConfigProvider};
 use crate::di::AppContext;
 use crate::interfaces::http::auth::dto::LoginResponse;
 
-
 pub async fn redirect_to_github_login_page(
-    mut cookie_jar: CookieJar,
-    State(ctx): State<Arc<AppContext>>
+    cookie_jar: CookieJar,
+    State(ctx): State<Arc<AppContext>>,
+    Query(query): Query<HashMap<String, String>>,
 ) -> Result<impl IntoResponse, AppError> {
     let config_provider: &dyn ConfigProvider = ctx.resolve_ref();
     let oauth2_provider: &dyn OAuth2ConfigProvider = ctx.resolve_ref();
-    let cfg = config_provider.get();
-    let state: String = super::generate_rand(32);
-// /* 
-    let redirect_uri = OAuth2RedirectURI::builder()
-        .base_url(oauth2_provider.github_login_url().as_str())
-        .redirect_uri(oauth2_provider.github_code_redirect_uri().as_str())
-        .client_id(oauth2_provider.github_client_id().as_str())
-        .response_type("code")
-        .scope(oauth2_provider.github_scopes().as_str())
-        .state(state.as_str())
-        .build()
-        .map_err(|e| {
-            panic!("Error building redirect URI");
-        })
-        .unwrap();
+    let cookie_maker: &dyn CookieMaker = ctx.resolve_ref();
+    let github_oauth2_service = GithubOAuth2UsecaseImpl::new(
+        oauth2_provider,
+        cookie_maker,
+    );
 
-    let mut state_cookie = Cookie::new("oauth2-state", state.clone());
-    state_cookie.set_path("/");
-    state_cookie.set_http_only(cfg.is_production());
-    state_cookie.set_secure(cfg.is_production());
-    state_cookie.set_same_site(axum_extra::extract::cookie::SameSite::Lax);
-    state_cookie.set_max_age(time::Duration::seconds(180));
-    cookie_jar = cookie_jar.add(state_cookie);
-
-    //Ok((cookie_jar, Redirect::to("http://localhost:3000/")).into_response())
+    let (cookie_jar, redirect_uri) = github_oauth2_service.redirect_to_login_page(cookie_jar);
+    tracing::debug!("redirect_uri : {:?}", redirect_uri);
+    tracing::debug!("cookie_jar : {:?}", cookie_jar);
 
     Ok((cookie_jar, Redirect::to(redirect_uri.to_string().as_str())).into_response())
 }
 
-pub async fn try_to_exchange_access_token(
-    mut cookie_jar: CookieJar,
+
+async fn oauth2_sign_in(
+    cookie_jar: CookieJar,
     State(ctx): State<Arc<AppContext>>,
-    Query(queries): Query< HashMap<String, String> >,
+    Query(query): Query<HashMap<String, String>>,
 ) -> Result<ReturnValue<LoginResponse>, AppError> {
     let config_provider: &dyn ConfigProvider = ctx.resolve_ref();
     let oauth2_provider: &dyn OAuth2ConfigProvider = ctx.resolve_ref();
-    let cfg = config_provider.get();
+    let cookie_maker: &dyn CookieMaker = ctx.resolve_ref();
+    let github_oauth2_service: &dyn OAuth2Usecase = &GithubOAuth2UsecaseImpl::new(
+        oauth2_provider,
+        cookie_maker,
+    );
 
-    let mut state_cookie = cookie_jar
-        .get("oauth2-state")
-        .unwrap()
-        .clone();
+    let state = query.get("state").ok_or_else(|| {
+        AppError::with_message(ErrorCode::Unauthorized, "state is required")
+    })?;
+    
+    let code = query.get("code").ok_or_else(|| {
+        AppError::with_message(ErrorCode::Unauthorized, "code is required")
+    })?;
 
-    tracing::debug!("queries : {:?}", queries);
-    tracing::debug!("state : {:?}", state_cookie.value());
+    let user_profile = github_oauth2_service
+        .get_userinfo(cookie_jar, state, code)
+        .await?;
 
-    Ok(ReturnValue { 
-        status: 201, 
-        message: "Github Login 성공".to_string(), 
+    tracing::debug!("user_profile : {:?}", user_profile);
+
+    let auth_service: &dyn LoginUseCase = ctx.resolve_ref();
+    let login_command = OAuth2LoginCommand {
+        provider: user_profile.provider,
+        user_id: user_profile.user_id,
+        email: user_profile.email,
+        access_token: user_profile.access_token,
+    };
+
+    let login_result = auth_service.login_by_oauth2(login_command).await?;
+    tracing::debug!("login_result : {:?}", login_result);
+
+    Ok(ReturnValue {
+        status: 201,
         data: LoginResponse {
             typ: "Bearer".to_string(),
-            access_token: "hello world!".to_string(),
-            refresh_token: "hello world!".to_string(),
-        }
+            access_token: login_result.access_token,
+            refresh_token: login_result.refresh_token,
+        },
+        message: "Github 로그인 성공".to_string(),
     })
-}
-
-async fn try_to_get_user_info(
-    State(ctx): State<Arc<AppContext>>
-) {
-
 }

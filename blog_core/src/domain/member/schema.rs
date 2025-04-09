@@ -12,7 +12,7 @@ pub struct Model {
     pub password: String,
     pub role: String,
     pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
     pub is_activated: bool,
 }
 
@@ -21,7 +21,11 @@ pub enum Relation {
     #[sea_orm(
         has_many = "crate::domain::board::schema::post::Entity",
     )]
-    Post
+    Post,
+    #[sea_orm(
+        has_many = "crate::domain::member::oauth2::schema::Entity",
+    )]
+    OAuth2Member
 }
 
 impl Related<crate::domain::board::schema::post::Entity> for Entity {

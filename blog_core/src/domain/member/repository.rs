@@ -72,7 +72,7 @@ impl SaveMemberPort for MemberCommandRepository {
         orm_entity.role = Set(member.role.to_owned());
         orm_entity.is_activated = Set(member.is_activated.to_owned());
         orm_entity.created_at = Set(member.created_at.to_owned());
-        orm_entity.updated_at = Set(member.updated_at.to_owned());
+        orm_entity.updated_at = Set(Some(chrono::Utc::now().naive_utc()));
 
         let result = orm_entity.update(txn).await?;
         Ok(member_mapper::to_domain(&result))

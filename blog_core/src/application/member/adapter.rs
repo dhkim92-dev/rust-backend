@@ -65,7 +65,7 @@ impl MemberCreateUseCase for MemberCreateUseCaseImpl {
             password: bcrypt::hash(command.password, 10).unwrap(),
             role: "MEMBER".to_string(),
             created_at: chrono::Utc::now().naive_utc(),
-            updated_at: chrono::Utc::now().naive_utc(),
+            updated_at: None, //chrono::Utc::now().naive_utc(),
             is_activated: true,
         };
 
@@ -103,7 +103,7 @@ impl MemberUpdateUseCase for MemberUpdateUseCaseImpl {
         member_entity.nickname = command.nickname;
         member_entity.email = command.email;
         member_entity.password = bcrypt::hash(command.password, 10).unwrap();
-        member_entity.updated_at = chrono::Utc::now().naive_utc();
+        // member_entity.updated_at = chrono::Utc::now().naive_utc();
 
         let modified_entity = self.save_member_port.update(&txn, member_entity).await?;
         txn.commit().await?;

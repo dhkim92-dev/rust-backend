@@ -14,6 +14,10 @@ use super::common::jwt::JwtServiceImpl;
 use super::config::ConfigProviderImpl;
 use super::domain::board::repository::{SeaOrmLoadBoardAdapter, SeaOrmSaveBoardAdapter};
 use super::domain::member::repository::{MemberCommandRepository, MemberQueryRepository};
+use super::domain::member::oauth2_member::repository::{
+    SeaormLoadOAuth2MemberAdapter, SeaormSaveOAuth2MemberAdapter,
+};
+use super::common::utility::cookie_maker::CookieMakerImpl;
 
 module! {
     pub AppContext {
@@ -23,9 +27,13 @@ module! {
             ConfigProviderImpl,
             CookieBuilderImpl,
             FileWriterImpl,
+            CookieMakerImpl,
 
             // OAuth2
             OAuth2ConfigProviderImpl,
+            SeaormLoadOAuth2MemberAdapter,
+            SeaormSaveOAuth2MemberAdapter,
+
 
             // Auth
             AuthService,

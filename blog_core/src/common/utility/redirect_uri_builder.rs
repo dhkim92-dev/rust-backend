@@ -1,8 +1,8 @@
 use crate::common::AppError;
 use crate::common::error_code::ErrorCode;
+use serde::{Deserialize, Serialize};
 
-
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct OAuth2RedirectURI {
     base_url: String,
     redirect_uri: String,

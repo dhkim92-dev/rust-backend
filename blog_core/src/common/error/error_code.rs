@@ -12,6 +12,7 @@ pub enum ErrorCode {
     Conflict,
     DbError,
     NotImplemented,
+    InvalidInput,
     // 검증 에러
     ValidationError,
 
@@ -26,6 +27,14 @@ pub enum ErrorCode {
     // 멤버 에러 코드
     MemberNotFound,
     EmailAlreadyExists,
+
+    // OAuth2 관련 에러 
+    FailedToGetAuthorizationGrantCode,
+    FailedToGetAccessToken,
+    FailedToDeserializeAccessToken,
+    FailedToGetUserProfile,
+    FailedToDeserializeUserProfile,
+    StateMismatch,
 }
 
 impl ErrorCode {
@@ -79,6 +88,12 @@ impl ErrorCode {
             // 검증 에러
             Self::ValidationError => (StatusCode::BAD_REQUEST, "GE-008", "검증 오류입니다."),
 
+            Self::InvalidInput => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "GE-009",
+                "잘못된 입력입니다.",
+            ),
+
             // 인증 관련 에러
             Self::EmailPasswordMismatch => (
                 StatusCode::UNAUTHORIZED,
@@ -109,6 +124,38 @@ impl ErrorCode {
                 StatusCode::BAD_REQUEST,
                 "ME-002",
                 "이미 존재하는 이메일입니다.",
+            ),
+
+            // OAuth2 관련 에러
+            Self::FailedToGetAuthorizationGrantCode => (
+                StatusCode::UNAUTHORIZED,
+                "OE-001",
+                "Authorization Grant Code를 가져오는 데 실패했습니다.",
+            ),
+            Self::FailedToGetAccessToken => (
+                StatusCode::UNAUTHORIZED,
+                "OE-002",
+                "Access Token을 가져오는 데 실패했습니다.",
+            ),
+            Self::FailedToDeserializeAccessToken => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "OE-003",
+                "Access Token을 역직렬화하는 데 실패했습니다.",
+            ),
+            Self::FailedToGetUserProfile => (
+                StatusCode::UNAUTHORIZED,
+                "OE-004",
+                "사용자 프로필을 가져오는 데 실패했습니다.",
+            ),
+            Self::FailedToDeserializeUserProfile => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "OE-005",
+                "사용자 프로필을 역직렬화하는 데 실패했습니다.",
+            ),
+            Self::StateMismatch => (
+                StatusCode::UNAUTHORIZED,
+                "OE-006",
+                "State 값이 일치하지 않습니다.",
             ),
         }
     }
