@@ -160,6 +160,7 @@ impl ErrorCode {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_message(code: ErrorCode, message: &'static str) -> ApiResponse<String> {
         let (status, code, _message) = code.cast();
         ApiResponse {

@@ -6,9 +6,10 @@ use crate::application::oauth2::usecases::OAuth2Usecase;
 use crate::common::error_code::ErrorCode;
 use crate::common::{AppError, CookieMaker};
 use crate::config::OAuth2ConfigProvider;
-use crate::application::oauth2::{generate_rand,OAuth2Provider, OAuth2UserProfile, OAuth2Request, OAuth2RequestBuilder, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, OAUTH2_MODE_COOKIE_NAME, OAUTH2_REDIRECT_URI_COOKIE_NAME};
+use crate::application::oauth2::{generate_rand, OAuth2Provider, OAuth2Request, OAuth2RequestBuilder, OAuth2UserProfile, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, OAUTH2_COOKIE_EXPIRE_SECONDS, OAUTH2_MODE_COOKIE_NAME, OAUTH2_REDIRECT_URI_COOKIE_NAME};
 
 #[derive(serde::Deserialize)]
+#[allow(dead_code)]
 pub struct GithubAccessTokenResponse {
     pub access_token: String,
     pub token_type: String,
@@ -16,6 +17,7 @@ pub struct GithubAccessTokenResponse {
 }
 
 #[derive(serde::Deserialize)]
+#[allow(dead_code)]
 pub struct GithubUserProfile {
     pub login: String,
     pub id: u64,
@@ -62,24 +64,37 @@ impl <'a> GithubOAuth2UsecaseImpl<'a> {
 
     async fn get_user_profile(&self, access_token: String) ->
         Result<OAuth2UserProfile, AppError> {
-
+        tracing::debug!("get uer profile, access_token: {}", access_token);
+        let authorization = format!("Bearer {}", access_token);
+        tracing::debug!("authorization: {}", authorization);
         let uri = "https://api.github.com/user";
         let http_client = reqwest::Client::new();
-        http_client.get(uri)
-            .header("Authorization", format!("Bearer {}", access_token))
+        let response = http_client.get(uri)
+            .header("Authorization", authorization)
             .header("Accept", "application/json")
             .header("X-Github-Api-Version", "2022-11-28")
+            .header("User-Agent", "reqwest")
             .send()
+            .await;
+
+        tracing::debug!("response: {:?}", response);
+        let response = response
+            .map_err(|_| AppError::with_message(ErrorCode::InternalServerError, "OAuth2 제공자와 통신에서 오류가 발생했습니다."))?;
+
+        if response.status() != reqwest::StatusCode::OK {
+            return Err(AppError::with_message(ErrorCode::InternalServerError, "OAuth2 제공자와 통신에서 오류가 발생했습니다."));
+        }
+
+        let user_profile: GithubUserProfile = response
+            .json()
             .await
-            .map_err(|_| AppError::from(ErrorCode::FailedToGetUserProfile))?
-            .json::<GithubUserProfile>()
-            .await
-            .map_err(|_| AppError::from(ErrorCode::FailedToDeserializeUserProfile))
-            .map(|profile| {
-                let mut profile: OAuth2UserProfile = profile.into();
-                profile.access_token = access_token;
-                profile
-            })
+            .map_err(|_| AppError::with_message(ErrorCode::InternalServerError, "OAuth2 제공자와 통신메시지 해석에 오류가 발생했습니다."))?;
+
+        // tracing::debug!("user_profile: {:?}", user_profile);
+        let mut user_profile: OAuth2UserProfile = user_profile.into();
+        user_profile.access_token = access_token;
+
+        Ok(user_profile)
     }
 
     async fn request_access_token(&self, grant_code: String) -> Result<String, AppError> {
@@ -113,7 +128,7 @@ impl <'a> GithubOAuth2UsecaseImpl<'a> {
 #[async_trait::async_trait]
 impl <'a> OAuth2Usecase for GithubOAuth2UsecaseImpl <'a>{
 
-    fn redirect_to_login_page(&self, jar: CookieJar) -> (CookieJar, String) {
+    fn redirect_to_login_page(&self, jar: CookieJar, mode: String) -> (CookieJar, String) {
 
         let mut request = OAuth2RequestBuilder::default()
             .provider(OAuth2Provider::Github)
@@ -125,6 +140,7 @@ impl <'a> OAuth2Usecase for GithubOAuth2UsecaseImpl <'a>{
             .state(Some(generate_rand(32)))
             .build()
             .expect("Failed to build OAuth2Request");
+        request.additional_params.insert("mode".to_owned(), mode.to_string());
 
         let uri = request.to_redirect_uri().unwrap();
         request.full_redirect_uri = Some(uri.clone());
@@ -135,22 +151,27 @@ impl <'a> OAuth2Usecase for GithubOAuth2UsecaseImpl <'a>{
         let jar = jar.remove(OAUTH2_REDIRECT_URI_COOKIE_NAME);
         let jar = jar.remove(OAUTH2_MODE_COOKIE_NAME);
 
-        let request_cookie = self.cookie_maker
+        let mut request_cookie = self.cookie_maker
             .create_cookie(
                 OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME.to_string(), 
                 encoded_request.to_string()
             );
-        let redirect_uri_cookie = self.cookie_maker
+
+        let mut redirect_uri_cookie = self.cookie_maker
             .create_cookie(
                 OAUTH2_REDIRECT_URI_COOKIE_NAME.to_string(), 
                 uri.clone()
             );
-        let mode_cookie = self.cookie_maker
+
+        let mut mode_cookie = self.cookie_maker
             .create_cookie(
                 OAUTH2_MODE_COOKIE_NAME.to_string(), 
                 "sign-in".to_string()
             );
 
+        request_cookie.set_max_age(time::Duration::seconds(OAUTH2_COOKIE_EXPIRE_SECONDS as i64));
+        redirect_uri_cookie.set_max_age(time::Duration::seconds(OAUTH2_COOKIE_EXPIRE_SECONDS as i64));
+        mode_cookie.set_max_age(time::Duration::seconds(OAUTH2_COOKIE_EXPIRE_SECONDS as i64));
 
         let jar = jar.add(request_cookie);
         let jar = jar.add(redirect_uri_cookie);
@@ -163,7 +184,7 @@ impl <'a> OAuth2Usecase for GithubOAuth2UsecaseImpl <'a>{
         jar: CookieJar, 
         state: String,
         grant_code: String
-    ) -> Result<OAuth2UserProfile, AppError> {
+    ) -> Result<(CookieJar, OAuth2UserProfile), AppError> {
 
         let request_cookie = jar.get(OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME)
             .ok_or_else(|| AppError::from(ErrorCode::BadRequest))?;
@@ -171,8 +192,8 @@ impl <'a> OAuth2Usecase for GithubOAuth2UsecaseImpl <'a>{
             .map_err(|_| AppError::from(ErrorCode::BadRequest))?;
         let request_cookie = serde_json::from_slice::<OAuth2Request>(&request_cookie)
             .map_err(|_| AppError::from(ErrorCode::BadRequest))?;
-        let redirect_cookie = jar.get(OAUTH2_REDIRECT_URI_COOKIE_NAME)
-            .ok_or_else(|| AppError::from(ErrorCode::BadRequest))?;
+/*         let redirect_cookie = jar.get(OAUTH2_REDIRECT_URI_COOKIE_NAME)
+            .ok_or_else(|| AppError::from(ErrorCode::BadRequest))?; */
 
         if request_cookie.state != Some(state) {
             return Err(AppError::with_message(
@@ -182,9 +203,15 @@ impl <'a> OAuth2Usecase for GithubOAuth2UsecaseImpl <'a>{
         }
 
         let access_token = self.request_access_token(grant_code).await?;
-        let user_info = self.get_user_profile(access_token).await?;
 
-        Err(AppError::from(ErrorCode::InternalServerError))
+        tracing::debug!("receive github token : ${:?}", access_token);
+        let user_info = self.get_user_profile(access_token).await?;
+        tracing::debug!("receive github user profile : ${:?}", user_info);
+        let jar = jar.remove(OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);
+        let jar = jar.remove(OAUTH2_REDIRECT_URI_COOKIE_NAME);
+        let jar = jar.remove(OAUTH2_MODE_COOKIE_NAME);
+
+        Ok((jar, user_info))
     }
 }
 

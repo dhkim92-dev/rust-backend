@@ -48,7 +48,7 @@ pub struct MemberResponse {
     email: String,
     nickname: String,
     created_at: NaiveDateTime,
-    updated_at: NaiveDateTime,
+    updated_at: Option<NaiveDateTime>,
     role: String,
     is_activated: bool,
 }

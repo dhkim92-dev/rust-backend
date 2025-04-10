@@ -1,7 +1,7 @@
 use super::usecases::{
     JwtReissueResult, JwtUseCase, LoginCommand, LoginCommandResult, LoginUseCase, OAuth2LoginCommand,
 };
-use crate::application::member::{MemberCreateCommand, MemberCreateUseCase};
+//use crate::application::member::{MemberCreateCommand, MemberCreateUseCase};
 use crate::application::oauth2::generate_rand;
 use crate::common::database::DbConnProvider;
 use crate::common::error::error_code::ErrorCode;
@@ -13,6 +13,7 @@ use crate::domain::member::oauth2_member::repository::{LoadOAuth2MemberPort, Sav
 use crate::domain::member::repository::{LoadMemberPort, SaveMemberPort};
 use sea_orm::DatabaseTransaction;
 use shaku::Component;
+use std::process::exit;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -36,22 +37,28 @@ pub struct AuthService {
 impl AuthService {
 
     fn create_new_member(&self, email: String, nickname: String) -> MemberEntity {
-        MemberEntity {
+        let entity = MemberEntity {
             id: None,
             email,
             nickname,
-            password: bcrypt::hash(generate_rand(32), 10),
+            password: bcrypt::hash(generate_rand(32), 10).unwrap(),
             role: "MEMBER".to_string(),
             created_at: chrono::Utc::now().naive_utc(),
             updated_at: None,
             is_activated: true,
-        }
+        };
+
+        tracing::debug!("create_new_member: {:?}", entity);
+
+        entity
     }
 
     async fn do_join_or_union(&self, 
         txn: &DatabaseTransaction, 
         command: OAuth2LoginCommand
     ) -> Result<MemberEntity, AppError> {
+
+        let virtual_email_addr = format!("{}-{}@dohoon-kim.kr", command.provider.clone(), command.user_id.clone());
         
         let member = match command.email.clone() {
             Some(email) => {
@@ -74,6 +81,7 @@ impl AuthService {
                             .await?
                     }
                 };
+                tracing::debug!("exist_member: {:?}", exist_member);
                 exist_member
             },
             None => {
@@ -92,7 +100,7 @@ impl AuthService {
             member.id.unwrap(),
             command.provider,
             command.user_id,
-            command.email.clone(),
+            Some(member.email.clone()),
             command.access_token,
         );
 
@@ -112,21 +120,21 @@ impl LoginUseCase for AuthService {
         &self,
         command: OAuth2LoginCommand,
     ) -> Result<LoginCommandResult, AppError> {
-        let txn = self.db.ro_txn().await.map_err(|_| E::InternalServerError)?;
+        let txn = self.db.rw_txn().await.map_err(|_| ErrorCode::InternalServerError)?;
 
         let oauth2_member = self
             .load_oauth2_member_port
-            .find_by_provider_and_user_id(&txn, &command.provider, &command.user_id)
-            .await?;
+            .find_by_provider_and_user_id(&txn, command.provider.clone(), command.user_id.clone())
+            .await;
 
         let member = match oauth2_member {
             Some(oauth2_member) => {
-                self.load_member_port.find_by_id(&txn, oauth2_member.get_member_id()).await?;
+                self.load_member_port.find_by_id(&txn, oauth2_member.get_member_id()).await?
             },
             None => {
-                self.do_join_process(&txn, command).await?;
+                Some(self.do_join_or_union(&txn, command.clone()).await?)
             }
-        };
+        }.unwrap();
 
         txn.commit().await?;
 

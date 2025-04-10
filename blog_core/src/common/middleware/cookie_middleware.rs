@@ -4,6 +4,7 @@ use axum_extra::extract::cookie::CookieJar;
 use std::sync::Arc;
 use tracing::debug;
 
+#[allow(dead_code)]
 pub async fn cookie_middleware(mut req: Request<Body>, next: Next) -> Result<Response, ErrorCode> {
     debug!("cookie write middleware");
     let cookie_jar = Arc::new(CookieJar::from_headers(&req.headers()));

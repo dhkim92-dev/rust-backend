@@ -1,9 +1,11 @@
 use sea_orm::{ActiveModelBehavior, DeriveEntityModel, DeriveRelation, EnumIter, Related, RelationDef, RelationTrait};
+use sea_orm::prelude::*;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, DeriveEntityModel)]
+#[derive(Debug, Clone, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "oauth2_member")]
 pub struct Model {
+    #[sea_orm(primary_key)]
     pub id: Uuid,
     pub provider: String,
     pub user_id: String,

@@ -1,5 +1,5 @@
 use sea_orm::ActiveValue::Set;
-use sea_orm::{ColumnTrait, DatabaseTransaction, EntityTrait, QueryFilter};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseTransaction, EntityTrait, QueryFilter};
 use shaku::{Component, Interface};
 use crate::common::error_code::ErrorCode;
 use crate::common::AppError;
@@ -20,15 +20,21 @@ impl LoadOAuth2MemberPort for SeaormLoadOAuth2MemberAdapter {
         provider: String,
         user_id: String
     ) -> Option<OAuth2MemberEntity> {
+
         let result = OAuth2Member::find()
             .filter(Column::Provider.eq(provider))
             .filter(Column::UserId.eq(user_id))
             .one(txn)
-            .await
-            .map_err(|e| AppError::from(ErrorCode::DbError))
-            .ok()?;
+            .await;
 
-        Ok(oauth2_member_mapper::to_domain(result))
+        match result {
+            Ok(Some(entity)) => Some(oauth2_member_mapper::to_domain(entity)),
+            Ok(None) => None,
+            Err(e) => {
+                tracing::error!("Error loading OAuth2 member: {:?}", e);
+                None
+            }
+        }
     }
 }
 
@@ -41,7 +47,7 @@ impl SaveOAuth2MemberPort for SeaormSaveOAuth2MemberAdapter {
 
     async fn save(&self, txn: &DatabaseTransaction, entity: OAuth2MemberEntity) -> Result<OAuth2MemberEntity, AppError> {
 
-        let active_model = oauth2_member_mapper::to_orm(entity);
+        let mut active_model = oauth2_member_mapper::to_orm(entity);
         
         if active_model.id.is_set() {
             return Err(AppError::with_message(ErrorCode::InternalServerError, "Save 메서드는 신규 생성에만 사용해야 합니다."));
@@ -49,11 +55,14 @@ impl SaveOAuth2MemberPort for SeaormSaveOAuth2MemberAdapter {
 
         active_model.id = Set(uuid::Uuid::new_v4());
 
-        let result = active_model.insert(txn)
-            .await.map_err(|e| AppError::from(ErrorCode::DbError))?;
-        let entity = oauth2_member_mapper::to_domain(result);
-
-        Ok(entity)
+        active_model
+            .insert(txn)
+            .await
+            .map(|orm_entity| oauth2_member_mapper::to_domain(orm_entity))
+            .map_err(|e| {
+                tracing::error!("Error saving OAuth2 member: {:?}", e);
+                AppError::with_message(ErrorCode::InternalServerError, "Failed to save OAuth2 member")
+            })
     }
 }
 

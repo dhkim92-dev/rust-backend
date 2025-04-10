@@ -17,6 +17,7 @@ pub struct PostEntity {
     updated_at: Option<NaiveDateTime>,
 }
 
+#[allow(dead_code)]
 impl PostEntity {
     pub fn new(
         id: Option<Uuid>,

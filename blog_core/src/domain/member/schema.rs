@@ -23,7 +23,7 @@ pub enum Relation {
     )]
     Post,
     #[sea_orm(
-        has_many = "crate::domain::member::oauth2::schema::Entity",
+        has_many = "crate::domain::member::oauth2_member::schema::Entity",
     )]
     OAuth2Member
 }

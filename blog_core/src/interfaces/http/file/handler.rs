@@ -2,17 +2,21 @@ use std::sync::Arc;
 use axum::{extract::{State, Multipart}, Extension};
 use serde::Serialize;
 use shaku::HasComponent;
-use crate::{common::{error_code::ErrorCode, file_writer::FileWriter, AppError, LoginMember, ReturnValue}, config::ConfigProvider, di::AppContext};
+use crate::{common::{error_code::ErrorCode, file_writer::FileWriter, AppError, LoginMember, ReturnValue}, di::AppContext};
 
 pub async fn upload_image(
     State(ctx): State<Arc<AppContext>>,
     Extension(login_member): Extension<LoginMember>,
     mut form: Multipart
 ) -> Result<ReturnValue<ImageUploadResposne>, AppError> {
-    let cfg_provider: &dyn ConfigProvider = ctx.resolve_ref();
+    // let cfg_provider: &dyn ConfigProvider = ctx.resolve_ref();
     let file_writer: &dyn FileWriter = ctx.resolve_ref();
     let field = form.next_field().await.unwrap().unwrap();
     let name = field.name().unwrap().to_string();
+
+    if !login_member.is_admin() {
+        return Err(AppError::from(ErrorCode::Forbidden));
+    }
 
     if name != "file" {
         return Err(AppError::from(ErrorCode::BadRequest));

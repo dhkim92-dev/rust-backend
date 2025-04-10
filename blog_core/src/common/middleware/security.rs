@@ -52,6 +52,7 @@ impl LoginMember {
 }
 
 #[derive(Eq, PartialEq, Debug, PartialOrd, Ord, Clone)]
+#[allow(dead_code)]
 pub enum SecurityRole {
     Anonymouse,
     Member,

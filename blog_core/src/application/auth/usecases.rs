@@ -13,6 +13,7 @@ pub struct LoginCommandResult {
     pub refresh_token: String,
 }
 
+#[derive(Clone)]
 pub struct OAuth2LoginCommand {
     pub provider: String,
     pub user_id: String,

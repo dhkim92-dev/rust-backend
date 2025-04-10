@@ -29,7 +29,7 @@ pub struct MemberDto {
     pub email: String,
     pub role: String,
     pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
     pub is_activated: bool,
 }
 

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use axum_extra::extract::CookieJar;
 use derive_builder::Builder;
 use serde::{Serialize, Deserialize};
@@ -6,12 +8,12 @@ use crate::common::AppError;
 #[async_trait::async_trait]
 pub trait OAuth2Usecase {
 
-    fn redirect_to_login_page(&self, jar: CookieJar) -> (CookieJar, String);
+    fn redirect_to_login_page(&self, jar: CookieJar, mode: String) -> (CookieJar, String);
 
     async fn get_userinfo(&self, 
         jar: CookieJar,
         code: String,
-        grant_code: String) -> Result<OAuth2UserProfile, AppError>;
+        grant_code: String) -> Result<(CookieJar, OAuth2UserProfile), AppError>;
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -32,10 +34,12 @@ pub struct OAuth2Request {
     #[builder(default=None)]
     pub state: Option<String>,
     // pub nounce: Option<String>,
-    #[builder(default="false")]
+    #[builder(default="true")]
     pub prompt: bool,
     #[builder(default=None)]
-    pub full_redirect_uri: Option<String>
+    pub full_redirect_uri: Option<String>,
+    #[builder(default=HashMap::new())]
+    pub additional_params: HashMap<String, String>,
 }
 
 impl OAuth2Request {
@@ -58,6 +62,10 @@ impl OAuth2Request {
         }
 
         uri.push_str(&format!("&prompt={}", request.prompt));
+
+        for (key, value) in request.additional_params.iter() {
+            uri.push_str(&format!("&{}={}", key, value));
+        }
 
         Some(uri)
     }

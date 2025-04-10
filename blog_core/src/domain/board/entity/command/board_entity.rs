@@ -43,6 +43,7 @@ impl BoardEntity {
         Ok(true)
     }
 
+    #[allow(dead_code)]
     fn validate(&self) -> Result<bool, AppError> {
         self.validate_name(&self.name)?;
 
@@ -71,6 +72,7 @@ impl BoardEntity {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn update(&mut self) -> Result<bool, AppError> {
         if self.validate().is_ok() {
             // Update logic here

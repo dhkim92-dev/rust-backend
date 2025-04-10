@@ -6,7 +6,7 @@ use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use chrono::NaiveDateTime;
 use uuid::Uuid;
-use crate::common::error_code::ErrorCode;
+// use crate::common::error_code::ErrorCode;
 use crate::application::board::{CategoryVo, CreatePostCommand, ModifyPostCommand, PostCreateUsecase, PostDeleteUsecase, PostDto, PostModifyUsecase, PostQueryUsecase, QPostDto, WriterVo};
 use crate::common::{AppError, CursorList, CursorListBuilder, LoginMember, ReturnValue};
 use crate::config::ConfigProvider;

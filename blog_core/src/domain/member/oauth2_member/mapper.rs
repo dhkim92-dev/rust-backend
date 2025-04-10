@@ -7,10 +7,10 @@ pub mod oauth2_member_mapper {
 
     pub fn to_domain(orm_model: Model) -> OAuth2MemberEntity {
         OAuth2MemberEntity::new(
-            orm_model.id,
+            Some(orm_model.id),
+            orm_model.member_id,
             orm_model.provider,
             orm_model.user_id,
-            orm_model.member_id,
             orm_model.email,
             orm_model.access_token,
         )
@@ -21,7 +21,7 @@ pub mod oauth2_member_mapper {
             id: if entity.get_id().is_none() {
                 NotSet
             } else {
-                Set(entity.get_id())
+                Set(entity.get_id().expect("ID should be set"))
             },
             provider: Set(entity.get_provider().clone()),
             user_id: Set(entity.get_user_id().clone()),

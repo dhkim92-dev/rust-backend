@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use uuid::Uuid;
 
+#[derive(Debug, Clone)]
 pub struct MemberEntity {
     pub id: Option<Uuid>,
     pub nickname: String,

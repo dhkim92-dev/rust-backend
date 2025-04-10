@@ -29,7 +29,7 @@ impl OAuth2MemberEntity {
         }
     }
 
-    pub fn get_id(&self) -> Uuid {
+    pub fn get_id(&self) -> Option<Uuid> {
         self.id
     }
 
